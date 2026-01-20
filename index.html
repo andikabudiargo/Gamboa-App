@@ -81,7 +81,14 @@
 <div class="grid grid-cols-2 gap-4 mt-5">
 
   <!-- Card -->
-  <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+  <div onclick="openModal({
+       title: 'Kelas Warna',
+       organizer: 'Sebingkisah',
+       materials: [
+         { name: 'Teori Warna', link: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' },
+         { name: 'Modul PDF', link: 'sample.pdf' }
+       ]
+     })" class="card bg-white rounded-2xl shadow-sm overflow-hidden">
     <img
       src="kelas-warna.jpg"
       class="w-full h-28 object-cover"
@@ -96,6 +103,45 @@
       </p>
     </div>
   </div>
+
+<!-- Modal -->
+<div
+  id="modal"
+  class="fixed inset-0 bg-white z-[9999]
+         translate-x-full transition-transform duration-300 ease-out
+         flex flex-col"
+>
+  <!-- Header -->
+  <div class="flex items-center justify-between px-5 py-4 border-b">
+    <div>
+      <h2 id="modalTitle" class="text-lg font-semibold text-gray-900"></h2>
+      <p id="modalOrganizer" class="text-sm text-gray-500"></p>
+    </div>
+    <button
+      onclick="closeModal()"
+      class="text-2xl leading-none text-gray-500 hover:text-gray-800"
+    >
+      &times;
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="flex flex-1 overflow-hidden">
+    <!-- 40% Materi -->
+    <div
+      id="materialList"
+      class="w-2/5 border-r p-4 space-y-2 overflow-y-auto"
+    ></div>
+
+    <!-- 60% Preview -->
+    <div
+      id="preview"
+      class="w-3/5 p-4 flex items-center justify-center text-gray-400"
+    >
+      Pilih materi untuk preview
+    </div>
+  </div>
+</div>
 
   <!-- Card -->
   <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -245,6 +291,63 @@ function toggleTheme() {
       icon.classList.replace('fa-sun', 'fa-moon')
     }
   }
+
+function openModal(data) {
+  const modal = document.getElementById('modal');
+  modal.classList.remove('translate-x-full');
+
+  document.getElementById('modalTitle').textContent = data.title;
+  document.getElementById('modalOrganizer').textContent = 'by ' + data.organizer;
+
+  const list = document.getElementById('materialList');
+  list.innerHTML = '';
+
+  data.materials.forEach(item => {
+    const el = document.createElement('div');
+    el.className =
+      'p-3 rounded-xl cursor-pointer hover:bg-gray-100 transition text-sm';
+    el.textContent = item.name;
+    el.onclick = () => loadPreview(item.link);
+    list.appendChild(el);
+  });
+}
+
+function closeModal() {
+  const modal = document.getElementById('modal');
+  modal.classList.add('translate-x-full');
+
+  document.getElementById('preview').innerHTML =
+    '<span class="text-gray-400">Pilih materi untuk preview</span>';
+}
+
+function loadPreview(link) {
+  const preview = document.getElementById('preview');
+
+  if (link.includes('youtube.com') || link.includes('youtu.be')) {
+    const id =
+      link.includes('v=')
+        ? link.split('v=')[1].split('&')[0]
+        : link.split('/').pop();
+
+    preview.innerHTML = `
+      <iframe
+        class="w-full h-full rounded-xl"
+        src="https://www.youtube.com/embed/${id}"
+        allowfullscreen>
+      </iframe>
+    `;
+  } else if (link.endsWith('.pdf')) {
+    preview.innerHTML = `
+      <iframe
+        class="w-full h-full rounded-xl"
+        src="${link}">
+      </iframe>
+    `;
+  } else {
+    preview.innerHTML =
+      '<span class="text-gray-400">Preview tidak tersedia</span>';
+  }
+}
   </script>
 </body>
 </html>
