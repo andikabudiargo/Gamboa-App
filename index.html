@@ -130,13 +130,13 @@
     <!-- 40% Materi -->
     <div
       id="materialList"
-      class="w-1/5 border-r p-4 space-y-2 overflow-y-auto"
+      class="w-2/5 border-r p-4 space-y-2 overflow-y-auto"
     ></div>
 
     <!-- 60% Preview -->
     <div
       id="preview"
-      class="w-4/5 p-4 flex items-center justify-center text-gray-400"
+      class="w-3/5 p-4 flex items-center justify-center text-gray-400"
     >
       Pilih materi untuk preview
     </div>
@@ -330,20 +330,26 @@ function loadPreview(link) {
         : link.split('/').pop();
 
     preview.innerHTML = `
-      <iframe
-        class="w-full h-full rounded-xl"
-        src="https://www.youtube.com/embed/${id}"
-        allowfullscreen>
-      </iframe>
+      <div class="w-full aspect-video max-h-[60vh] rounded-xl overflow-hidden">
+        <iframe
+          class="w-full h-full"
+          src="https://www.youtube.com/embed/${id}"
+          allowfullscreen>
+        </iframe>
+      </div>
     `;
-  } else if (link.endsWith('.pdf')) {
+  } 
+  else if (link.endsWith('.pdf')) {
     preview.innerHTML = `
-      <iframe
-        class="w-full h-full rounded-xl"
-        src="${link}">
-      </iframe>
+      <div class="w-full h-[60vh] rounded-xl overflow-hidden">
+        <iframe
+          class="w-full h-full"
+          src="${link}">
+        </iframe>
+      </div>
     `;
-  } else {
+  } 
+  else {
     preview.innerHTML =
       '<span class="text-gray-400">Preview tidak tersedia</span>';
   }
