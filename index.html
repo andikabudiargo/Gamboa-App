@@ -126,21 +126,10 @@
   </div>
 
   <!-- Body -->
-  <div class="flex flex-1 overflow-hidden">
-    <!-- 40% Materi -->
-    <div
-      id="materialList"
-      class="w-2/5 border-r p-4 space-y-2 overflow-y-auto"
-    ></div>
-
-    <!-- 60% Preview -->
-    <div
-      id="preview"
-      class="w-3/5 p-4 flex items-center justify-center text-gray-400"
-    >
-      Pilih materi untuk preview
-    </div>
-  </div>
+  <div
+    id="materialList"
+    class="flex-1 overflow-y-auto divide-y"
+  ></div>
 </div>
 
   <!-- Card -->
@@ -293,44 +282,79 @@ function toggleTheme() {
   }
 
 function openModal(data) {
-  const modal = document.getElementById('modal');
-  modal.classList.remove('translate-x-full');
-
+  document.getElementById('modal').classList.remove('translate-x-full');
   document.getElementById('modalTitle').textContent = data.title;
   document.getElementById('modalOrganizer').textContent = 'by ' + data.organizer;
 
   const list = document.getElementById('materialList');
   list.innerHTML = '';
 
-  data.materials.forEach(item => {
-    const el = document.createElement('div');
-    el.className =
-      'p-3 rounded-xl cursor-pointer hover:bg-gray-100 transition text-sm';
-    el.textContent = item.name;
-    el.onclick = () => loadPreview(item.link);
-    list.appendChild(el);
+  data.materials.forEach((item, index) => {
+    const row = document.createElement('div');
+    row.className = 'p-4';
+
+    row.innerHTML = `
+      <button
+        class="w-full flex items-center gap-3 text-left"
+        onclick="toggleAccordion(this, '${item.link}')"
+      >
+        <span class="text-sm font-semibold text-gray-400 w-6">
+          ${index + 1}.
+        </span>
+
+        <div class="flex-1">
+          <p class="text-sm font-medium text-gray-900">
+            ${item.name}
+          </p>
+          <p class="text-xs text-gray-500 truncate">
+            ${item.link}
+          </p>
+        </div>
+
+        <span class="text-gray-400 transition-transform">
+          ▾
+        </span>
+      </button>
+
+      <div class="accordion-content hidden mt-3"></div>
+    `;
+
+    list.appendChild(row);
   });
 }
 
 function closeModal() {
-  const modal = document.getElementById('modal');
-  modal.classList.add('translate-x-full');
-
-  document.getElementById('preview').innerHTML =
-    '<span class="text-gray-400">Pilih materi untuk preview</span>';
+  document.getElementById('modal').classList.add('translate-x-full');
 }
 
-function loadPreview(link) {
-  const preview = document.getElementById('preview');
+function toggleAccordion(button, link) {
+  const content = button.parentElement.querySelector('.accordion-content');
+  const arrow = button.querySelector('span:last-child');
 
+  const isOpen = !content.classList.contains('hidden');
+
+  // close all accordion lain (optional tapi UX lebih enak)
+  document.querySelectorAll('.accordion-content').forEach(el => {
+    el.classList.add('hidden');
+  });
+  document.querySelectorAll('.accordion-content')
+    .forEach(el => el.innerHTML = '');
+  document.querySelectorAll('button span:last-child')
+    .forEach(el => el.classList.remove('rotate-180'));
+
+  if (isOpen) return;
+
+  arrow.classList.add('rotate-180');
+  content.classList.remove('hidden');
+
+  // render preview
   if (link.includes('youtube.com') || link.includes('youtu.be')) {
-    const id =
-      link.includes('v=')
-        ? link.split('v=')[1].split('&')[0]
-        : link.split('/').pop();
+    const id = link.includes('v=')
+      ? link.split('v=')[1].split('&')[0]
+      : link.split('/').pop();
 
-    preview.innerHTML = `
-      <div class="w-full aspect-video max-h-[60vh] rounded-xl overflow-hidden">
+    content.innerHTML = `
+      <div class="w-full aspect-video max-h-[60vh] rounded-xl overflow-hidden bg-black">
         <iframe
           class="w-full h-full"
           src="https://www.youtube.com/embed/${id}"
@@ -340,8 +364,8 @@ function loadPreview(link) {
     `;
   } 
   else if (link.endsWith('.pdf')) {
-    preview.innerHTML = `
-      <div class="w-full h-[60vh] rounded-xl overflow-hidden">
+    content.innerHTML = `
+      <div class="w-full h-[60vh] rounded-xl overflow-hidden border">
         <iframe
           class="w-full h-full"
           src="${link}">
@@ -350,8 +374,11 @@ function loadPreview(link) {
     `;
   } 
   else {
-    preview.innerHTML =
-      '<span class="text-gray-400">Preview tidak tersedia</span>';
+    content.innerHTML = `
+      <p class="text-sm text-gray-400">
+        Preview tidak tersedia
+      </p>
+    `;
   }
 }
   </script>
