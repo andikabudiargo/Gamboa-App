@@ -7,7 +7,7 @@
 
   <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <link
   rel="stylesheet"
   href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
@@ -364,21 +364,49 @@ function toggleAccordion(button, link) {
     `;
   } 
   else if (link.endsWith('.pdf')) {
-    content.innerHTML = `
-      <div class="w-full h-[60vh] rounded-xl overflow-hidden border">
-        <iframe
-          class="w-full h-full"
-          src="${link}">
-        </iframe>
-      </div>
-    `;
-  } 
+  content.innerHTML = `
+    <div class="w-full h-screen rounded-xl overflow-hidden border bg-gray-50">
+      <div id="pdfViewer" class="w-full h-full overflow-y-auto space-y-6 p-4"></div>
+    </div>
+  `;
+
+  renderPDF(link);
+}
   else {
     content.innerHTML = `
       <p class="text-sm text-gray-400">
         Preview tidak tersedia
       </p>
     `;
+  }
+}
+
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+async function renderPDF(url) {
+  const container = document.getElementById('pdfViewer');
+  container.innerHTML = '';
+
+  const pdf = await pdfjsLib.getDocument(url).promise;
+
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+
+    const viewport = page.getViewport({ scale: 1.2 }); // aman mobile
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    canvas.className = 'mx-auto rounded-lg shadow';
+
+    await page.render({
+      canvasContext: ctx,
+      viewport: viewport
+    }).promise;
+
+    container.appendChild(canvas);
   }
 }
   </script>
