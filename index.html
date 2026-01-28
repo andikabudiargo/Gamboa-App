@@ -388,81 +388,85 @@ function closeModal() {
 }
 
 function toggleAccordion(button, link) {
-  const content = button.parentElement.querySelector('.accordion-content');
+  const row = button.closest('div');
+  const content = row.querySelector('.accordion-content');
   const arrow = button.querySelector('span:last-child');
 
   const isOpen = !content.classList.contains('hidden');
 
-  // close all accordion lain (optional tapi UX lebih enak)
   document.querySelectorAll('.accordion-content').forEach(el => {
-    el.classList.add('hidden');
+    if (el !== content) {
+      el.classList.add('hidden');
+      el.innerHTML = '';
+    }
   });
-  document.querySelectorAll('.accordion-content')
-    .forEach(el => el.innerHTML = '');
+
   document.querySelectorAll('button span:last-child')
     .forEach(el => el.classList.remove('rotate-180'));
 
-  if (isOpen) return;
+  if (isOpen) {
+    content.classList.add('hidden');
+    return;
+  }
 
-arrow.classList.add('rotate-180');
-content.classList.remove('hidden');
+  // 🚀 short link langsung tab baru
+  if (isShortUrl(link)) {
+    window.open(link, '_blank');
+    return;
+  }
 
-// 🚀 short link? langsung cabut ke tab baru
-if (isShortUrl(link)) {
-  window.open(link, '_blank');
-  content.innerHTML = `
-    <p class="text-sm text-gray-400">
-      Link dibuka di tab baru 🚀
-    </p>
-  `;
-  return;
-}
+  arrow.classList.add('rotate-180');
+  content.classList.remove('hidden');
 
-// ▶️ YouTube tapi gak mau embed → buka YouTube
-if (isYouTube(link)) {
-  const videoId = getYoutubeId(link);
-
-  if (!videoId) {
+  // ▶️ YouTube Shorts
+  if (link.includes('youtube.com/shorts')) {
     window.open(link, '_blank');
     content.innerHTML = `
       <p class="text-sm text-gray-400">
-        Video dibuka di YouTube ▶️
+        Shorts dibuka di YouTube ▶️
       </p>
     `;
     return;
   }
 
-  // embed cuma kalau ID valid
-  content.innerHTML = `
-    <div class="w-full aspect-video max-h-[60vh] rounded-xl overflow-hidden bg-black">
-      <iframe
-        class="w-full h-full"
-        src="https://www.youtube.com/embed/${videoId}"
-        allowfullscreen>
-      </iframe>
-    </div>
-  `;
-  return;
-}
+  // ▶️ YouTube normal
+  if (isYouTube(link)) {
+    const videoId = getYoutubeId(link);
 
-// 📄 PDF masih dapet privilege preview
-if (link.endsWith('.pdf')) {
-  content.innerHTML = `
-    <div class="w-full h-screen rounded-xl overflow-hidden border bg-gray-50">
-      <div id="pdfViewer" class="w-full h-full overflow-y-auto space-y-6 p-4"></div>
-    </div>
-  `;
-  renderPDF(link);
-  return;
-}
+    if (!videoId) {
+      window.open(link, '_blank');
+      return;
+    }
 
-// ❌ sisanya? ya udah
-content.innerHTML = `
-  <p class="text-sm text-gray-400">
-    Preview tidak tersedia
-  </p>
-`;
+    content.innerHTML = `
+      <div class="w-full aspect-video max-h-[60vh] rounded-xl overflow-hidden bg-black">
+        <iframe
+          class="w-full h-full"
+          src="https://www.youtube.com/embed/${videoId}"
+          allowfullscreen>
+        </iframe>
+      </div>
+    `;
+    return;
   }
+
+  // 📄 PDF
+  if (link.endsWith('.pdf')) {
+    content.innerHTML = `
+      <div class="w-full h-screen rounded-xl overflow-hidden border bg-gray-50">
+        <div id="pdfViewer" class="w-full h-full overflow-y-auto p-4"></div>
+      </div>
+    `;
+    renderPDF(link);
+    return;
+  }
+
+  content.innerHTML = `
+    <p class="text-sm text-gray-400">
+      Preview tidak tersedia
+    </p>
+  `;
+}
 
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
