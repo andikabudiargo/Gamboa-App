@@ -172,7 +172,13 @@
        organizer: 'Sebingkisah',
        materials: [
          { name: 'Link List Materi', link: 'https://bit.ly/komposisiASIK' },
-         { name: 'Cara Ubah Warna Jadi Grayscale', link: 'API_250028C3O.pdf' }
+         { name: 'Materi Komposisi PDF', link: 'Komposisi.pdf' },
+{ name: Pilihan Focal Point, Ritme & Tata Letak', link: 'focal_point.jpg' },
+{ name: 'Cara Ubah Warna jadi Grayscale', link: '' },
+{ name: 'Video Tutorial 1: Ukuran, Diagonal, Progresif', link: 'https://youtu.be/FhS-uCxmx8c?si=CbTfggyHooqVwKpf' },
+{ name: 'Video Tutorial 2: Color Value, Rule of Third, Reguler', link: 'https://youtu.be/i1SHcUG8dWA?si=7wBzWRsZUWTDG7ZL' }
+{ name: 'Video Tutorial 3: Ukuran dan Alur Pandang, Progresif, Unbalance', link: 'https://youtu.be/b85kjSzHIPU?si=mLirW_teWHUh3kwH' },
+{ name: 'Video Tutorial 4: Ukuran, Acak, Golden Spiral', link: 'https://youtu.be/cueSUB5X3vU?si=dTAVt_pZDALlqlIs' }
        ]
      })" class="bg-white rounded-2xl shadow-sm overflow-hidden">
     <img
@@ -488,6 +494,60 @@ function openModalKomposisi(data) {
 
 function closeModalKomposisi() {
   document.getElementById('modalKomposisi').classList.add('translate-x-full');
+}
+
+function toggleAccordionKomposisi(button, link) {
+  const content = button.parentElement.querySelector('.accordion-content');
+  const arrow = button.querySelector('span:last-child');
+
+  const isOpen = !content.classList.contains('hidden');
+
+  // close all accordion lain (optional tapi UX lebih enak)
+  document.querySelectorAll('.accordion-content').forEach(el => {
+    el.classList.add('hidden');
+  });
+  document.querySelectorAll('.accordion-content')
+    .forEach(el => el.innerHTML = '');
+  document.querySelectorAll('button span:last-child')
+    .forEach(el => el.classList.remove('rotate-180'));
+
+  if (isOpen) return;
+
+  arrow.classList.add('rotate-180');
+  content.classList.remove('hidden');
+
+  // render preview
+  if (link.includes('youtube.com') || link.includes('youtu.be')) {
+    const id = link.includes('v=')
+      ? link.split('v=')[1].split('&')[0]
+      : link.split('/').pop();
+
+    content.innerHTML = `
+      <div class="w-full aspect-video max-h-[60vh] rounded-xl overflow-hidden bg-black">
+        <iframe
+          class="w-full h-full"
+          src="https://www.youtube.com/embed/${id}"
+          allowfullscreen>
+        </iframe>
+      </div>
+    `;
+  } 
+  else if (link.endsWith('.pdf')) {
+  content.innerHTML = `
+    <div class="w-full h-screen rounded-xl overflow-hidden border bg-gray-50">
+      <div id="pdfViewer" class="w-full h-full overflow-y-auto space-y-6 p-4"></div>
+    </div>
+  `;
+
+  renderPDF(link);
+}
+  else {
+    content.innerHTML = `
+      <p class="text-sm text-gray-400">
+        Preview tidak tersedia
+      </p>
+    `;
+  }
 }
   </script>
 </body>
