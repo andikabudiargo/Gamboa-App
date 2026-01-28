@@ -171,10 +171,11 @@
        title: 'Kelas Komposisi & Cover Book',
        organizer: 'Sebingkisah',
        materials: [
-         { name: 'Link List Materi', link: 'https://bit.ly/komposisiASIK' },
+                  { name: 'Link List Materi', link: 'https://bit.ly/komposisiASIK' },
          { name: 'Materi Komposisi PDF', link: 'Komposisi.pdf' },
-{ name: 'Pilihan Focal Point, Ritme & Tata Letak', link: 'focal_point.jpg' },
-{ name: 'Cara Ubah Warna jadi Grayscale', link: '' },
+{ name: 'Pilihan Focal Point, Ritme & Tata Letak', link: 'IMG-20260121-WA0011.jpg' },
+{ name: 'Cara Ubah Warna jadi Grayscale', link: 'https://youtube.com/shorts/rbeacXTRsUw?si=nZCWv9V21kVMbyH_' },
+{ name: 'Rekaman Zoom Kelas Komposisi', link: 'https://youtu.be/P0QGYFY0PkE' },
 { name: 'Video Tutorial 1: Ukuran, Diagonal, Progresif', link: 'https://youtu.be/FhS-uCxmx8c?si=CbTfggyHooqVwKpf' },
 { name: 'Video Tutorial 2: Color Value, Rule of Third, Reguler', link: 'https://youtu.be/i1SHcUG8dWA?si=7wBzWRsZUWTDG7ZL' },
 { name: 'Video Tutorial 3: Ukuran dan Alur Pandang, Progresif, Unbalance', link: 'https://youtu.be/b85kjSzHIPU?si=mLirW_teWHUh3kwH' },
@@ -297,6 +298,25 @@
 </main>
 
 <script>
+
+function isShortUrl(link) {
+  const shortDomains = ['bit.ly', 't.co', 'tinyurl.com', 'goo.gl', 'cutt.ly'];
+  return shortDomains.some(domain => link.includes(domain));
+}
+
+function isYouTube(link) {
+  return link.includes('youtube.com') || link.includes('youtu.be');
+}
+
+function getYoutubeId(link) {
+  if (link.includes('v=')) {
+    return link.split('v=')[1].split('&')[0];
+  }
+  if (link.includes('youtu.be/')) {
+    return link.split('youtu.be/')[1].split('?')[0];
+  }
+  return null;
+}
   
   function setActive(el) {
     document.querySelectorAll('nav button').forEach(btn => {
@@ -384,40 +404,64 @@ function toggleAccordion(button, link) {
 
   if (isOpen) return;
 
-  arrow.classList.add('rotate-180');
-  content.classList.remove('hidden');
+arrow.classList.add('rotate-180');
+content.classList.remove('hidden');
 
-  // render preview
-  if (link.includes('youtube.com') || link.includes('youtu.be')) {
-    const id = link.includes('v=')
-      ? link.split('v=')[1].split('&')[0]
-      : link.split('/').pop();
+// 🚀 short link? langsung cabut ke tab baru
+if (isShortUrl(link)) {
+  window.open(link, '_blank');
+  content.innerHTML = `
+    <p class="text-sm text-gray-400">
+      Link dibuka di tab baru 🚀
+    </p>
+  `;
+  return;
+}
 
+// ▶️ YouTube tapi gak mau embed → buka YouTube
+if (isYouTube(link)) {
+  const videoId = getYoutubeId(link);
+
+  if (!videoId) {
+    window.open(link, '_blank');
     content.innerHTML = `
-      <div class="w-full aspect-video max-h-[60vh] rounded-xl overflow-hidden bg-black">
-        <iframe
-          class="w-full h-full"
-          src="https://www.youtube.com/embed/${id}"
-          allowfullscreen>
-        </iframe>
-      </div>
+      <p class="text-sm text-gray-400">
+        Video dibuka di YouTube ▶️
+      </p>
     `;
-  } 
-  else if (link.endsWith('.pdf')) {
+    return;
+  }
+
+  // embed cuma kalau ID valid
+  content.innerHTML = `
+    <div class="w-full aspect-video max-h-[60vh] rounded-xl overflow-hidden bg-black">
+      <iframe
+        class="w-full h-full"
+        src="https://www.youtube.com/embed/${videoId}"
+        allowfullscreen>
+      </iframe>
+    </div>
+  `;
+  return;
+}
+
+// 📄 PDF masih dapet privilege preview
+if (link.endsWith('.pdf')) {
   content.innerHTML = `
     <div class="w-full h-screen rounded-xl overflow-hidden border bg-gray-50">
       <div id="pdfViewer" class="w-full h-full overflow-y-auto space-y-6 p-4"></div>
     </div>
   `;
-
   renderPDF(link);
+  return;
 }
-  else {
-    content.innerHTML = `
-      <p class="text-sm text-gray-400">
-        Preview tidak tersedia
-      </p>
-    `;
+
+// ❌ sisanya? ya udah
+content.innerHTML = `
+  <p class="text-sm text-gray-400">
+    Preview tidak tersedia
+  </p>
+`;
   }
 }
 
