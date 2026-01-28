@@ -450,6 +450,20 @@ function toggleAccordion(button, link) {
     return;
   }
 
+if (link.match(/\.(jpg|jpeg|png|webp)$/i)) {
+  content.innerHTML = `
+    <div class="w-full max-h-[70vh] flex items-center justify-center bg-black/5 rounded-xl p-3">
+      <img
+        src="${link}"
+        alt="Preview Gambar"
+        class="max-h-[65vh] w-auto object-contain rounded-lg shadow"
+        loading="lazy"
+      />
+    </div>
+  `;
+  return;
+}
+
   // 📄 PDF
   if (link.endsWith('.pdf')) {
     content.innerHTML = `
