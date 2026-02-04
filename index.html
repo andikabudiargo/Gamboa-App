@@ -383,6 +383,23 @@ function getYoutubeId(link) {
   }
   return null;
 }
+
+function isInstagram(link) {
+  return /instagram\.com\/(p|reel|tv)/i.test(link);
+}
+
+function isGoogleDrive(link) {
+  return /drive\.google\.com/i.test(link);
+}
+
+function getDrivePreviewLink(link) {
+  // ubah link drive jadi preview
+  // contoh:
+  // https://drive.google.com/file/d/FILE_ID/view
+  // jadi:
+  // https://drive.google.com/file/d/FILE_ID/preview
+  return link.replace('/view', '/preview');
+}
   
   function setActive(el) {
     document.querySelectorAll('nav button').forEach(btn => {
@@ -512,6 +529,39 @@ function toggleAccordion(button, link) {
           allowfullscreen>
         </iframe>
       </div>
+    `;
+    return;
+  }
+
+// 📸 Instagram
+  if (isInstagram(link)) {
+    window.open(link, '_blank');
+    content.innerHTML = `
+      <p class="text-sm text-gray-400">
+        Instagram dibuka di tab baru 📸
+      </p>
+    `;
+    return;
+  }
+
+  // ☁️ Google Drive
+  if (isGoogleDrive(link)) {
+    const previewLink = getDrivePreviewLink(link);
+
+    content.innerHTML = `
+      <div class="w-full h-[70vh] rounded-xl overflow-hidden border bg-gray-50">
+        <iframe
+          src="${previewLink}"
+          class="w-full h-full"
+          allow="autoplay">
+        </iframe>
+      </div>
+      <a
+        href="${link}"
+        target="_blank"
+        class="inline-block mt-2 text-sm text-blue-500 hover:underline">
+        Buka di Google Drive ↗
+      </a>
     `;
     return;
   }
