@@ -170,7 +170,28 @@
 </div>
 
   <!-- Card -->
-  <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+ <div onclick="openModalIlustrasi({
+       title: 'Kelas Ilustrasi Cerita Anak Intensif',
+       organizer: 'Sebingkisah',
+       materials: [
+                  { name: 'List Materi & Rekomendasi Brush', link: 'https://bit.ly/EYCresource314' },
+         { name: 'Prospek Kerja Ilustrator PDF', link: 'Prospek Kerja Ilustrator.pdf' },
+{ name: 'Record Zoom: Prospek Kerja Ilustrator', link: 'https://youtu.be/Vw4905c7dhU' },
+{ name: 'Materi 1: Pengenalan Aplikasi Procreate', link: 'https://youtu.be/rRHLs3iTKrk'},
+{ name: 'Materi 1: Pengenalan Aplikasi Ibis Paint X', link: 'https://youtu.be/VUfDHqQ7fBQ' },
+{ name: 'Materi 2: Dasar Sketsa Wajah', link: 'https://youtu.be/Ww7kjjyOPU4' },
+{ name: 'Materi 3: Menggambar Berbagai Rambut & Hijab', link: 'https://youtu.be/1ENwc2-bv7A' },
+{ name: 'Materi 4: Menggambar Ekspresi Wajah', link: 'https://youtu.be/6FkC_tIx63o' },
+{ name: 'Materi 5: Sketsa Wajah Berdasarkan Umur', link: 'https://youtu.be/-N-lm6y9Glk' },
+{ name: 'Materi 6: Dasar Anatomi Tubuh', link: 'https://youtu.be/PVH44upDPMU' },
+{ name: 'Materi 7: Anatomi Tubuh berdasarkan Umur', link: 'https://youtu.be/OuTtWUsqP4E' },
+{ name: 'Materi 8: Menggambar Berbagai Pose', link: 'https://youtu.be/tQ9OWEBLVB4' },
+{ name: 'Materi 9: Full Character & Coloring', link: 'https://youtu.be/Kto5EpiVhC8' },
+{ name: 'Materi Reels', link: 'https://www.instagram.com/p/DRO9KgJEjmV/?img_index=5&igsh=cG56aGdmMWtnbjVm' },
+{ name: 'Link Pengumpulan Tugas & Hasil Review', link: 'https://drive.google.com/drive/folders/1kYYZNsWRHQiVFbovYTICaD2vx6CPFYNY' }
+]
+})"
+ class="bg-white rounded-2xl shadow-sm overflow-hidden">
     <img
       src="ilustrasi-cerita-anak-intensif.jpg"
       class="w-full h-28 object-cover"
@@ -185,6 +206,33 @@
       </p>
     </div>
   </div>
+  
+  <div
+  id="modalIlustrasi"
+  class="fixed inset-0 bg-white z-[9999]
+         translate-x-full transition-transform duration-300 ease-out
+         flex flex-col"
+>
+  <!-- Header -->
+  <div class="flex items-center justify-between px-5 py-4 border-b">
+    <div>
+      <h2 id="modalTitleIlustrasi" class="text-lg font-semibold text-gray-900"></h2>
+      <p id="modalOrganizerIlustrasi" class="text-sm text-gray-500"></p>
+    </div>
+    <button
+      onclick="closeModalIlustrasi()"
+      class="text-2xl leading-none text-gray-500 hover:text-gray-800"
+    >
+      &times;
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div
+    id="materialListIlustrasi"
+    class="flex-1 overflow-y-auto divide-y"
+  ></div>
+</div>
   
     <!-- Card -->
   <div onclick="openModalEYC({
@@ -747,6 +795,52 @@ function openModalEYC(data) {
 
 function closeModalEYC() {
   document.getElementById('modalEYC').classList.add('translate-x-full');
+}
+
+function openModalIlustrasi(data) {
+  document.getElementById('modalIlustrasi').classList.remove('translate-x-full');
+  document.getElementById('modalTitleIlustrasi').textContent = data.title;
+  document.getElementById('modalOrganizerIlustrasi').textContent = 'by ' + data.organizer;
+
+  const list = document.getElementById('materialListIlustrasi');
+  list.innerHTML = '';
+
+  data.materials.forEach((item, index) => {
+    const row = document.createElement('div');
+    row.className = 'p-4';
+
+    row.innerHTML = `
+      <button
+        class="w-full flex items-center gap-3 text-left"
+        onclick="toggleAccordion(this, '${item.link}')"
+      >
+        <span class="text-sm font-semibold text-gray-400 w-6">
+          ${index + 1}.
+        </span>
+
+        <div class="flex-1">
+          <p class="text-sm font-medium text-gray-900">
+            ${item.name}
+          </p>
+          <p class="text-xs text-gray-500 truncate">
+            ${item.link}
+          </p>
+        </div>
+
+        <span class="text-gray-400 transition-transform">
+          ▾
+        </span>
+      </button>
+
+      <div class="accordion-content hidden mt-3"></div>
+    `;
+
+    list.appendChild(row);
+  });
+}
+
+function closeModalIlustrasi() {
+  document.getElementById('modalIlustrasi').classList.add('translate-x-full');
 }
 
 function toggleAccordionKomposisi(button, link) {
