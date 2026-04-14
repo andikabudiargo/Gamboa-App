@@ -651,6 +651,29 @@ function toggleAccordion(button, link) {
     return;
   }
 
+  // 📊 PPT / PPTX
+if (link.match(/\.(ppt|pptx)$/i)) {
+  const viewerLink = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(link)}`;
+
+  content.innerHTML = `
+    <div class="w-full h-[75vh] rounded-xl overflow-hidden border bg-gray-50">
+      <iframe
+        src="${viewerLink}"
+        class="w-full h-full"
+        frameborder="0">
+      </iframe>
+    </div>
+
+    <a
+      href="${link}"
+      target="_blank"
+      class="inline-block mt-2 text-sm text-blue-500 hover:underline">
+      Buka file PowerPoint ↗
+    </a>
+  `;
+  return;
+}
+
 if (link.match(/\.(jpg|jpeg|png|webp)$/i)) {
   content.innerHTML = `
     <div class="w-full max-h-[70vh] flex items-center justify-center bg-black/5 rounded-xl p-3">
