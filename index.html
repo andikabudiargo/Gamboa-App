@@ -434,6 +434,70 @@
   ></div>
 </div>
 
+<div onclick="openModalPerspektif({
+       title: 'Kelas Perspektif Buku Anak',
+       organizer: 'Sebingkisah',
+       materials: [
+         { name: 'Rekaman Zoom', link: 'https://youtu.be/KZLwpTQzl5E?si=2PTFpDlZuv318SV-' },
+          { name: 'Modul PDF Materi Perspektif', link: 'kelas-perspektif.pdf' },
+         { name: 'Materi 1 - Jenis - Jenis Perspektif', link: 'https://youtu.be/N2_ug9tbNmc?si=Btvj2MyBrYvJ5t3m' },
+         { name: 'Materi 2 - Penerapan Grid Perspektif', link: 'https://youtu.be/8gfSZHAMryY?si=ieEf2VPakTjEV95s' },
+         { name: 'Materi 3 - Membangun Background', link: 'https://youtu.be/M0x9taopT58?si=LK4UwbUmSttNGrce' },
+         { name: 'Materi 4 - Menambahkan Objek dan Karakter Menggunakan Perspektif', link: 'https://youtu.be/NYp8k384EO4?si=VmgwTla-jT90s4oG' },
+         { name: 'Materi 5 - Membuat Adegan Ilustrasi Utuh', link: 'https://youtu.be/m57ItPvPaow?si=eVWOVAgXjkjUWtlr'},
+        { name: 'Materi Bonus', link: 'https://youtu.be/j6VURSGXiRY?si=XdlfXun8qlQuHQVO' },
+         { name: 'Link Pengumpulan Tugas', link: 'https://drive.google.com/drive/folders/1lPcpKWitUD7R7WcrdWxflE8BK0RMnhY_' },
+         { name: 'Template Canvas', link: 'https://drive.google.com/drive/folders/1iSd4J-Ed-X1CxzRafGwK95idWH1ejvfnhttps://drive.google.com/drive/folders/1SLdOi6WcLpjsP4LjQwiiP9YDBkchfga3' },
+        { name: 'Rangkuman Materi 1', link: 'materi1.jpg' },
+        { name: 'Sketsa Rumah Pohon', link: 'sketsa-rumahpohon.jpg' },
+        { name: 'Hasil Jadi Rumah Pohon', link: 'hasil-rumahpohon.jpg' },
+        { name: 'Contoh Tugas', link: 'contoh-tugas.jpg' },
+        { name: 'Playlist Kelas Perspektif', link: 'https://youtube.com/playlist?list=PL_ioycqzvGn61dY28sgfsnbGNrYgXnkAv&si=Ri5cWdfiGjY2hCp7' },
+       ]
+     })" class="card bg-white rounded-2xl shadow-sm overflow-hidden">
+    <img
+      src="kelas-perspektif.jpg"
+      class="w-full h-28 object-cover"
+      alt="Kelas Perspektif"
+    >
+    <div class="p-3">
+      <h3 class="text-sm font-semibold text-gray-900 leading-tight">
+        Kelas Perspektif
+      </h3>
+      <p class="text-xs text-gray-500 mt-1">
+        by Sebingkisah
+      </p>
+    </div>
+  </div>
+
+<!-- Modal -->
+<div
+  id="modalPerspektif"
+  class="fixed inset-0 bg-white z-[9999]
+         translate-x-full transition-transform duration-300 ease-out
+         flex flex-col"
+>
+  <!-- Header -->
+  <div class="flex items-center justify-between px-5 py-4 border-b">
+    <div>
+      <h2 id="modalTitlePerspektif" class="text-lg font-semibold text-gray-900"></h2>
+      <p id="modalOrganizerPerspektif" class="text-sm text-gray-500"></p>
+    </div>
+    <button
+      onclick="closeModalPerspektif()"
+      class="text-2xl leading-none text-gray-500 hover:text-gray-800"
+    >
+      &times;
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div
+    id="materialListPerspektif"
+    class="flex-1 overflow-y-auto divide-y"
+  ></div>
+</div>
+
 </div>
 
 <nav
@@ -976,6 +1040,52 @@ function openModalPencahayaan(data) {
 
 function closeModalPencahayaan() {
   document.getElementById('modalPencahayaan').classList.add('translate-x-full');
+}
+
+function openModalPerspektif(data) {
+  document.getElementById('modalPerspektif').classList.remove('translate-x-full');
+  document.getElementById('modalTitlePerspektif').textContent = data.title;
+  document.getElementById('modalOrganizerPerspektif').textContent = 'by ' + data.organizer;
+
+  const list = document.getElementById('materialListPerspektif');
+  list.innerHTML = '';
+
+  data.materials.forEach((item, index) => {
+    const row = document.createElement('div');
+    row.className = 'p-4';
+
+    row.innerHTML = `
+      <button
+        class="w-full flex items-center gap-3 text-left"
+        onclick="toggleAccordion(this, '${item.link}')"
+      >
+        <span class="text-sm font-semibold text-gray-400 w-6">
+          ${index + 1}.
+        </span>
+
+        <div class="flex-1">
+          <p class="text-sm font-medium text-gray-900">
+            ${item.name}
+          </p>
+          <p class="text-xs text-gray-500 truncate">
+            ${item.link}
+          </p>
+        </div>
+
+        <span class="text-gray-400 transition-transform">
+          ▾
+        </span>
+      </button>
+
+      <div class="accordion-content hidden mt-3"></div>
+    `;
+
+    list.appendChild(row);
+  });
+}
+
+function closeModalPerspektif() {
+  document.getElementById('modalPerspektif').classList.add('translate-x-full');
 }
 
 function toggleAccordionKomposisi(button, link) {
