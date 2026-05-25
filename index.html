@@ -617,150 +617,543 @@
 
     document.getElementById('invTambahanLabel').addEventListener('input', recalc);
 
-    /* ───────────── INVOICE PDF GENERATOR ───────────── */
-    async function generateInvoice() {
-      const customer = document.getElementById('invCustomer').value.trim();
-      if (!customer) { alert('Nama customer wajib diisi!'); return; }
+    /* ───────────── INVOICE PRINT GENERATOR ───────────── */
+async function generateInvoice() {
 
-      const items = getItems();
-      if (items.length === 0) { alert('Tambahkan minimal satu item!'); return; }
+  const customer = document.getElementById('invCustomer').value.trim();
 
-      const diskon = parseFloat(document.getElementById('invDiskon').value) || 0;
-      const tambahan = parseFloat(document.getElementById('invTambahan').value) || 0;
-      const tambahanLabel = document.getElementById('invTambahanLabel').value.trim() || 'Tambahan';
-      const note = document.getElementById('invNote').value.trim();
+  if (!customer) {
+    alert('Nama customer wajib diisi!');
+    return;
+  }
 
-      let subtotal = 0;
-      items.forEach(i => subtotal += i.qty * i.price);
-      const grand = subtotal - diskon + tambahan;
+  const items = getItems();
 
-      const invNumber = 'INV-' + Date.now().toString().slice(-8);
-      const today = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+  if (items.length === 0) {
+    alert('Tambahkan minimal satu item!');
+    return;
+  }
 
-      // Build item rows HTML
-      const itemRowsHtml = items.map((item, idx) => `
-        <tr style="border-bottom:1px solid #f3e8ef;">
-          <td style="padding:9px 10px;color:#555;font-size:13px;">${idx + 1}</td>
-          <td style="padding:9px 10px;font-size:13px;">${item.name}</td>
-          <td style="padding:9px 10px;text-align:center;font-size:13px;">${item.qty}</td>
-          <td style="padding:9px 10px;text-align:right;font-size:13px;">${formatRp(item.price)}</td>
-          <td style="padding:9px 10px;text-align:right;font-size:13px;font-weight:600;">${formatRp(item.qty * item.price)}</td>
-        </tr>
-      `).join('');
+  const diskon = parseFloat(document.getElementById('invDiskon').value) || 0;
+  const tambahan = parseFloat(document.getElementById('invTambahan').value) || 0;
 
-      const previewEl = document.getElementById('invoicePreview');
-      previewEl.innerHTML = `
-        <div style="font-family:'Inter',sans-serif;color:#1a1a1a;background:#fff;width:794px;min-height:1122px;padding:52px;box-sizing:border-box;position:relative;">
+  const tambahanLabel =
+    document.getElementById('invTambahanLabel').value.trim() || 'Tambahan';
 
-          <!-- Header -->
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:36px;">
-            <div>
-              <div style="font-size:26px;font-weight:800;color:#ec4899;letter-spacing:-0.5px;line-height:1;">Gamboa Art</div>
-              <div style="font-style:italic;color:#be185d;font-size:11px;margin-top:2px;">Every stuff made with love~</div>
-              <div style="margin-top:10px;font-size:11px;color:#6b7280;line-height:1.7;">
-                Kp. Sukaraja, Kabupaten Purwakarta<br>
-                Jawa Barat<br>
-                @gamboaartxyz
-              </div>
-            </div>
-            <div style="text-align:right;">
-              <div style="font-size:28px;font-weight:300;color:#d1d5db;letter-spacing:2px;">INVOICE</div>
-              <div style="font-size:12px;color:#ec4899;font-weight:600;margin-top:4px;">${invNumber}</div>
-              <div style="font-size:11px;color:#9ca3af;margin-top:2px;">${today}</div>
-            </div>
+  const note = document.getElementById('invNote').value.trim();
+
+  let subtotal = 0;
+
+  items.forEach(i => {
+    subtotal += i.qty * i.price;
+  });
+
+  const grand = subtotal - diskon + tambahan;
+
+  const invNumber =
+    'INV-' + Date.now().toString().slice(-8);
+
+  const today = new Date().toLocaleDateString(
+    'id-ID',
+    {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    }
+  );
+
+  /* ───────────── ITEM ROWS ───────────── */
+
+  const itemRowsHtml = items.map((item, idx) => `
+    <tr style="border-bottom:1px solid #f3e8ef;">
+      <td style="padding:9px 10px;color:#555;font-size:13px;">
+        ${idx + 1}
+      </td>
+
+      <td style="padding:9px 10px;font-size:13px;">
+        ${item.name}
+      </td>
+
+      <td style="padding:9px 10px;text-align:center;font-size:13px;">
+        ${item.qty}
+      </td>
+
+      <td style="padding:9px 10px;text-align:right;font-size:13px;">
+        ${formatRp(item.price)}
+      </td>
+
+      <td style="padding:9px 10px;text-align:right;font-size:13px;font-weight:600;">
+        ${formatRp(item.qty * item.price)}
+      </td>
+    </tr>
+  `).join('');
+
+  /* ───────────── PREVIEW HTML ───────────── */
+
+  const invoiceHtml = `
+    <div
+      style="
+        font-family:'Inter',sans-serif;
+        color:#1a1a1a;
+        background:#fff;
+        width:794px;
+        min-height:1122px;
+        padding:52px;
+        box-sizing:border-box;
+        position:relative;
+      "
+    >
+
+      <!-- Header -->
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:flex-start;
+          margin-bottom:36px;
+        "
+      >
+
+        <div>
+
+          <div
+            style="
+              font-size:26px;
+              font-weight:800;
+              color:#ec4899;
+              letter-spacing:-0.5px;
+              line-height:1;
+            "
+          >
+            Gamboa Art
           </div>
 
-          <!-- Divider -->
-          <div style="height:2px;background:linear-gradient(to right,#ec4899,#f9a8d4,transparent);margin-bottom:28px;border-radius:2px;"></div>
-
-          <!-- Billing to -->
-          <div style="margin-bottom:28px;">
-            <div style="font-size:10px;font-weight:700;color:#9ca3af;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">Kepada</div>
-            <div style="font-size:16px;font-weight:700;color:#1a1a1a;">${customer}</div>
+          <div
+            style="
+              font-style:italic;
+              color:#be185d;
+              font-size:11px;
+              margin-top:2px;
+            "
+          >
+            Every stuff made with love~
           </div>
 
-          <!-- Items Table -->
-          <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
-            <thead>
-              <tr style="background:#fdf2f8;">
-                <th style="padding:10px 10px;text-align:left;font-size:11px;font-weight:700;color:#be185d;letter-spacing:0.5px;width:36px;">#</th>
-                <th style="padding:10px 10px;text-align:left;font-size:11px;font-weight:700;color:#be185d;letter-spacing:0.5px;">Item</th>
-                <th style="padding:10px 10px;text-align:center;font-size:11px;font-weight:700;color:#be185d;letter-spacing:0.5px;width:56px;">Qty</th>
-                <th style="padding:10px 10px;text-align:right;font-size:11px;font-weight:700;color:#be185d;letter-spacing:0.5px;width:130px;">Harga</th>
-                <th style="padding:10px 10px;text-align:right;font-size:11px;font-weight:700;color:#be185d;letter-spacing:0.5px;width:130px;">Jumlah</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemRowsHtml}
-            </tbody>
-          </table>
-
-          <!-- Totals -->
-          <div style="display:flex;justify-content:flex-end;">
-            <div style="width:280px;">
-              <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px;color:#6b7280;border-bottom:1px dashed #fce7f3;">
-                <span>Subtotal</span><span>${formatRp(subtotal)}</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px;color:#ef4444;border-bottom:1px dashed #fce7f3;">
-                <span>Diskon</span><span>- ${formatRp(diskon)}</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px;color:#6b7280;border-bottom:1px dashed #fce7f3;">
-                <span>${tambahanLabel}</span><span>+ ${formatRp(tambahan)}</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;padding:12px 14px;margin-top:8px;background:#fdf2f8;border-radius:10px;">
-                <span style="font-size:14px;font-weight:800;color:#be185d;">Grand Total</span>
-                <span style="font-size:15px;font-weight:800;color:#ec4899;">${formatRp(grand)}</span>
-              </div>
-            </div>
-          </div>
-
-          ${note ? `
-          <!-- Note -->
-          <div style="margin-top:36px;padding:16px 20px;background:#fdf9ff;border-left:3px solid #ec4899;border-radius:0 8px 8px 0;">
-            <div style="font-size:10px;font-weight:700;color:#be185d;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Catatan</div>
-            <div style="font-size:12px;color:#4b5563;line-height:1.6;">${note}</div>
-          </div>` : ''}
-
-          <!-- Footer -->
-          <div style="position:absolute;bottom:48px;left:52px;right:52px;">
-            <div style="height:1px;background:linear-gradient(to right,#fce7f3,#ec4899,#fce7f3);margin-bottom:16px;"></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <div style="font-size:11px;color:#9ca3af;">Gamboa Art · @gamboaartxyz</div>
-              <div style="font-size:11px;font-style:italic;color:#ec4899;">Every stuff made with love~</div>
-            </div>
+          <div
+            style="
+              margin-top:10px;
+              font-size:11px;
+              color:#6b7280;
+              line-height:1.7;
+            "
+          >
+            Kp. Sukaraja, Kabupaten Purwakarta<br>
+            Jawa Barat<br>
+            @gamboaartxyz
           </div>
 
         </div>
-      `;
 
-      // Render to PDF
-      const btn = document.querySelector('#panelInvoice button[onclick="generateInvoice()"]');
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-circle-notch spinner"></i> Membuat PDF...';
+        <div style="text-align:right;">
 
-      try {
-        const canvas = await html2canvas(previewEl.firstElementChild, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-        });
+          <div
+            style="
+              font-size:28px;
+              font-weight:300;
+              color:#d1d5db;
+              letter-spacing:2px;
+            "
+          >
+            INVOICE
+          </div>
 
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        const imgData = canvas.toDataURL('image/png');
-        const pdfW = pdf.internal.pageSize.getWidth();
-        const pdfH = (canvas.height * pdfW) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
-        pdf.save(`${invNumber}_${customer.replace(/\s+/g,'_')}.pdf`);
-      } catch(e) {
-        alert('Gagal generate PDF. Coba lagi.');
-        console.error(e);
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-file-arrow-down"></i> Generate & Download Invoice PDF';
-        previewEl.innerHTML = '';
-      }
-    }
+          <div
+            style="
+              font-size:12px;
+              color:#ec4899;
+              font-weight:600;
+              margin-top:4px;
+            "
+          >
+            ${invNumber}
+          </div>
+
+          <div
+            style="
+              font-size:11px;
+              color:#9ca3af;
+              margin-top:2px;
+            "
+          >
+            ${today}
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Divider -->
+      <div
+        style="
+          height:2px;
+          background:linear-gradient(to right,#ec4899,#f9a8d4,transparent);
+          margin-bottom:28px;
+          border-radius:2px;
+        "
+      ></div>
+
+      <!-- Billing -->
+      <div style="margin-bottom:28px;">
+
+        <div
+          style="
+            font-size:10px;
+            font-weight:700;
+            color:#9ca3af;
+            letter-spacing:1.5px;
+            text-transform:uppercase;
+            margin-bottom:6px;
+          "
+        >
+          Kepada
+        </div>
+
+        <div
+          style="
+            font-size:16px;
+            font-weight:700;
+            color:#1a1a1a;
+          "
+        >
+          ${customer}
+        </div>
+
+      </div>
+
+      <!-- Table -->
+      <table
+        style="
+          width:100%;
+          border-collapse:collapse;
+          margin-bottom:24px;
+        "
+      >
+
+        <thead>
+
+          <tr style="background:#fdf2f8;">
+
+            <th
+              style="
+                padding:10px;
+                text-align:left;
+                font-size:11px;
+                font-weight:700;
+                color:#be185d;
+                width:36px;
+              "
+            >
+              #
+            </th>
+
+            <th
+              style="
+                padding:10px;
+                text-align:left;
+                font-size:11px;
+                font-weight:700;
+                color:#be185d;
+              "
+            >
+              Item
+            </th>
+
+            <th
+              style="
+                padding:10px;
+                text-align:center;
+                font-size:11px;
+                font-weight:700;
+                color:#be185d;
+                width:56px;
+              "
+            >
+              Qty
+            </th>
+
+            <th
+              style="
+                padding:10px;
+                text-align:right;
+                font-size:11px;
+                font-weight:700;
+                color:#be185d;
+                width:130px;
+              "
+            >
+              Harga
+            </th>
+
+            <th
+              style="
+                padding:10px;
+                text-align:right;
+                font-size:11px;
+                font-weight:700;
+                color:#be185d;
+                width:130px;
+              "
+            >
+              Jumlah
+            </th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+          ${itemRowsHtml}
+        </tbody>
+
+      </table>
+
+      <!-- Totals -->
+      <div style="display:flex;justify-content:flex-end;">
+
+        <div style="width:280px;">
+
+          <div
+            style="
+              display:flex;
+              justify-content:space-between;
+              padding:7px 0;
+              font-size:13px;
+              color:#6b7280;
+              border-bottom:1px dashed #fce7f3;
+            "
+          >
+            <span>Subtotal</span>
+            <span>${formatRp(subtotal)}</span>
+          </div>
+
+          <div
+            style="
+              display:flex;
+              justify-content:space-between;
+              padding:7px 0;
+              font-size:13px;
+              color:#ef4444;
+              border-bottom:1px dashed #fce7f3;
+            "
+          >
+            <span>Diskon</span>
+            <span>- ${formatRp(diskon)}</span>
+          </div>
+
+          <div
+            style="
+              display:flex;
+              justify-content:space-between;
+              padding:7px 0;
+              font-size:13px;
+              color:#6b7280;
+              border-bottom:1px dashed #fce7f3;
+            "
+          >
+            <span>${tambahanLabel}</span>
+            <span>+ ${formatRp(tambahan)}</span>
+          </div>
+
+          <div
+            style="
+              display:flex;
+              justify-content:space-between;
+              padding:12px 14px;
+              margin-top:8px;
+              background:#fdf2f8;
+              border-radius:10px;
+            "
+          >
+            <span
+              style="
+                font-size:14px;
+                font-weight:800;
+                color:#be185d;
+              "
+            >
+              Grand Total
+            </span>
+
+            <span
+              style="
+                font-size:15px;
+                font-weight:800;
+                color:#ec4899;
+              "
+            >
+              ${formatRp(grand)}
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      ${note ? `
+        <div
+          style="
+            margin-top:36px;
+            padding:16px 20px;
+            background:#fdf9ff;
+            border-left:3px solid #ec4899;
+            border-radius:0 8px 8px 0;
+          "
+        >
+
+          <div
+            style="
+              font-size:10px;
+              font-weight:700;
+              color:#be185d;
+              letter-spacing:1px;
+              text-transform:uppercase;
+              margin-bottom:4px;
+            "
+          >
+            Catatan
+          </div>
+
+          <div
+            style="
+              font-size:12px;
+              color:#4b5563;
+              line-height:1.6;
+            "
+          >
+            ${note}
+          </div>
+
+        </div>
+      ` : ''}
+
+    </div>
+  `;
+
+  /* ───────────── BUTTON LOADING ───────────── */
+
+  const btn = document.querySelector(
+    '#panelInvoice button[onclick="generateInvoice()"]'
+  );
+
+  btn.disabled = true;
+
+  btn.innerHTML =
+    '<i class="fa-solid fa-circle-notch spinner"></i> Menyiapkan Invoice...';
+
+  try {
+
+    const printWindow = window.open('', '_blank');
+
+    printWindow.document.write(`
+      <html>
+
+        <head>
+
+          <title>${invNumber}</title>
+
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0"
+          >
+
+          <style>
+
+            *{
+              box-sizing:border-box;
+            }
+
+            body{
+              margin:0;
+              padding:20px;
+              background:#f5f5f5;
+              font-family:'Inter',sans-serif;
+            }
+
+            @page{
+              size:A4;
+              margin:0;
+            }
+
+            @media print{
+
+              body{
+                background:#fff;
+                padding:0;
+              }
+
+            }
+
+            .invoice-container{
+              width:794px;
+              margin:auto;
+              background:#fff;
+            }
+
+            @media(max-width:820px){
+
+              body{
+                padding:0;
+                background:#fff;
+              }
+
+              .invoice-container{
+                width:100%;
+              }
+
+            }
+
+          </style>
+
+        </head>
+
+        <body>
+
+          <div class="invoice-container">
+            ${invoiceHtml}
+          </div>
+
+        </body>
+
+      </html>
+    `);
+
+    printWindow.document.close();
+
+    setTimeout(() => {
+
+      printWindow.focus();
+
+      printWindow.print();
+
+    }, 700);
+
+  } catch(e){
+
+    alert('Gagal membuka invoice');
+
+    console.error(e);
+
+  } finally {
+
+    btn.disabled = false;
+
+    btn.innerHTML =
+      '<i class="fa-solid fa-file-arrow-down"></i> Generate & Download Invoice PDF';
+
+  }
+
+}
   </script>
 </body>
 </html>
