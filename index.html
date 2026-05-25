@@ -3,1144 +3,764 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <title>Fredelida Journal</title>
 
-  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<link rel="icon" href="/favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#111827">
-  <link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-  <!-- Custom Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
 
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
+    body { font-family: 'Inter', sans-serif; }
+
+    /* ── Slide-in modal ── */
+    .modal-panel {
+      transform: translateX(100%);
+      transition: transform 0.3s ease-out;
     }
+    .modal-panel.open {
+      transform: translateX(0);
+    }
+
+    /* ── Bottom nav ── */
+    .nav-btn { transition: color .2s, border-color .2s; }
+    .nav-btn.active { color: #ec4899; border-color: #ec4899; }
+
+    /* ── Invoice preview (hidden, used for PDF render) ── */
+    #invoicePreview {
+      position: fixed;
+      left: -9999px;
+      top: 0;
+      width: 794px; /* A4 width at 96dpi */
+      background: #fff;
+      font-family: 'Inter', sans-serif;
+      padding: 48px 52px;
+      box-sizing: border-box;
+    }
+
+    /* ── Spinner ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { animation: spin 0.8s linear infinite; }
   </style>
 </head>
+
 <body class="min-h-screen bg-[url('bg-1.png')] bg-cover bg-center">
-    
-    <!-- Header -->
-   <header class="flex items-center justify-between px-6 py-4 border-b border-white/20">
-  <div class="flex items-center gap-3">
-    <h1 class="text-gray-600 text-xl font-semibold tracking-wide">
-      Gamboa Art
-    </h1>
+
+  <!-- ═══════════════════════════════════════
+       HEADER
+  ═══════════════════════════════════════ -->
+  <header class="flex items-center justify-between px-6 py-4 border-b border-white/20">
+    <h1 class="text-gray-600 text-xl font-semibold tracking-wide">Gamboa Art</h1>
+    <button onclick="toggleTheme()"
+      class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-pink-100 transition">
+      <i id="themeIcon" class="fa-solid fa-moon text-gray-900"></i>
+    </button>
+  </header>
+
+  <!-- ═══════════════════════════════════════
+       MAIN — two tab panels
+  ═══════════════════════════════════════ -->
+  <main class="max-w-3xl mx-auto px-6 py-8 pb-28">
+
+    <!-- ── PANEL: Kelas ─────────────────────── -->
+    <div id="panelKelas">
+      <div class="mb-6">
+        <h1 class="text-lg font-bold text-gray-900">Halo, Fredelida Gamboa Masela 🌱</h1>
+        <p class="text-gray-600 text-sm mt-1">Mau cari materi apa hari ini?</p>
+      </div>
+
+      <!-- Search -->
+      <div class="relative">
+        <input type="text" id="searchInput" placeholder="Misal: Kelas Warna Lanjutan..."
+          oninput="filterCards()"
+          class="w-full rounded-full px-5 py-3 pr-12
+                 bg-white/80 backdrop-blur border border-pink-400
+                 shadow focus:outline-none focus:ring-2 focus:ring-pink-200
+                 placeholder:text-gray-400 text-sm" />
+        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-pink-400">
+          <i class="fa-solid fa-magnifying-glass"></i>
+        </span>
+      </div>
+
+      <div class="mt-8 mb-4">
+        <p class="text-gray-600 text-sm">List Kelas</p>
+        <div class="w-full mt-2 border-b-2 border-gray-900"></div>
+      </div>
+
+      <!-- Cards Grid -->
+      <div id="cardGrid" class="grid grid-cols-2 gap-4 mt-5">
+
+        <!-- Card: Warna Dasar -->
+        <div class="kelas-card bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
+          data-title="Kelas Warna Dasar"
+          onclick="openModal(kelasList[0])">
+          <img src="kelas-warna.jpg" class="w-full h-28 object-cover" alt="Kelas Warna"
+            onerror="this.classList.add('hidden')">
+          <div class="p-3">
+            <h3 class="text-sm font-semibold text-gray-900">Kelas Warna Dasar</h3>
+            <p class="text-xs text-gray-500 mt-1">by Sebingkisah</p>
+          </div>
+        </div>
+
+        <!-- Card: Ilustrasi Cerita Anak -->
+        <div class="kelas-card bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
+          data-title="Ilustrasi Cerita Anak Intensif"
+          onclick="openModal(kelasList[1])">
+          <img src="ilustrasi-cerita-anak-intensif.jpg" class="w-full h-28 object-cover" alt="ICA"
+            onerror="this.classList.add('hidden')">
+          <div class="p-3">
+            <h3 class="text-sm font-semibold text-gray-900">Ilustrasi Cerita Anak Intensif</h3>
+            <p class="text-xs text-gray-500 mt-1">by Sebingkisah</p>
+          </div>
+        </div>
+
+        <!-- Card: Explore Your Character -->
+        <div class="kelas-card bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
+          data-title="Explore Your Character"
+          onclick="openModal(kelasList[2])">
+          <img src="explore-character.jpg" class="w-full h-28 object-cover" alt="EYC"
+            onerror="this.classList.add('hidden')">
+          <div class="p-3">
+            <h3 class="text-sm font-semibold text-gray-900">Explore Your Character</h3>
+            <p class="text-xs text-gray-500 mt-1">by Sebingkisah</p>
+          </div>
+        </div>
+
+        <!-- Card: Komposisi -->
+        <div class="kelas-card bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
+          data-title="Komposisi dan Cover Book"
+          onclick="openModal(kelasList[3])">
+          <img src="komposisi.jpg" class="w-full h-28 object-cover" alt="Komposisi"
+            onerror="this.classList.add('hidden')">
+          <div class="p-3">
+            <h3 class="text-sm font-semibold text-gray-900">Komposisi dan Cover Book</h3>
+            <p class="text-xs text-gray-500 mt-1">by Sebingkisah</p>
+          </div>
+        </div>
+
+        <!-- Card: Pencahayaan -->
+        <div class="kelas-card bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
+          data-title="Kelas Pencahayaan"
+          onclick="openModal(kelasList[4])">
+          <img src="kelas-pencahayaan.jpg" class="w-full h-28 object-cover" alt="Pencahayaan"
+            onerror="this.classList.add('hidden')">
+          <div class="p-3">
+            <h3 class="text-sm font-semibold text-gray-900">Kelas Pencahayaan</h3>
+            <p class="text-xs text-gray-500 mt-1">by Sebingkisah</p>
+          </div>
+        </div>
+
+        <!-- Card: Perspektif -->
+        <div class="kelas-card bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
+          data-title="Kelas Perspektif Buku Anak"
+          onclick="openModal(kelasList[5])">
+          <img src="kelas-perspektif.jpg" class="w-full h-28 object-cover" alt="Perspektif"
+            onerror="this.classList.add('hidden')">
+          <div class="p-3">
+            <h3 class="text-sm font-semibold text-gray-900">Kelas Perspektif Buku Anak</h3>
+            <p class="text-xs text-gray-500 mt-1">by Sebingkisah</p>
+          </div>
+        </div>
+
+      </div><!-- /cardGrid -->
+    </div><!-- /panelKelas -->
+
+    <!-- ── PANEL: Invoice ────────────────────── -->
+    <div id="panelInvoice" class="hidden">
+      <div class="mb-6">
+        <h1 class="text-lg font-bold text-gray-900">🧾 Buat Invoice</h1>
+        <p class="text-gray-600 text-sm mt-1">Isi detail transaksi, lalu klik Generate.</p>
+      </div>
+
+      <div class="bg-white/90 rounded-2xl shadow-sm p-5 space-y-5">
+
+        <!-- Customer -->
+        <div>
+          <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Nama Customer</label>
+          <input id="invCustomer" type="text" placeholder="Contoh: Siti Aisyah"
+            class="mt-1 w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-pink-300" />
+        </div>
+
+        <!-- Items -->
+        <div>
+          <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Item</label>
+          <div id="itemRows" class="space-y-3 mt-2"></div>
+          <button onclick="addItemRow()"
+            class="mt-3 flex items-center gap-1.5 text-pink-500 text-sm font-medium hover:text-pink-700 transition">
+            <i class="fa-solid fa-plus-circle"></i> Tambah Item
+          </button>
+        </div>
+
+        <!-- Divider -->
+        <div class="border-t border-dashed border-gray-200"></div>
+
+        <!-- Diskon & Tambahan -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Diskon (Rp)</label>
+            <input id="invDiskon" type="number" min="0" placeholder="0" oninput="recalc()"
+              class="mt-1 w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-pink-300" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tambahan (Rp)</label>
+            <input id="invTambahan" type="number" min="0" placeholder="0" oninput="recalc()"
+              class="mt-1 w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-pink-300" />
+          </div>
+        </div>
+
+        <!-- Label tambahan -->
+        <div>
+          <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Keterangan Tambahan</label>
+          <input id="invTambahanLabel" type="text" placeholder="Misal: Pajak 11%"
+            class="mt-1 w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-pink-300" />
+        </div>
+
+        <!-- Summary Preview -->
+        <div class="bg-pink-50 rounded-xl p-4 space-y-1.5 text-sm">
+          <div class="flex justify-between text-gray-600">
+            <span>Subtotal</span><span id="previewSubtotal">Rp 0</span>
+          </div>
+          <div class="flex justify-between text-gray-600">
+            <span>Diskon</span><span id="previewDiskon" class="text-red-500">- Rp 0</span>
+          </div>
+          <div class="flex justify-between text-gray-600">
+            <span id="previewTambahanLabel">Tambahan</span><span id="previewTambahan">+ Rp 0</span>
+          </div>
+          <div class="border-t border-pink-200 pt-2 flex justify-between font-bold text-gray-900">
+            <span>Grand Total</span><span id="previewGrand">Rp 0</span>
+          </div>
+        </div>
+
+        <!-- Note -->
+        <div>
+          <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Catatan (opsional)</label>
+          <textarea id="invNote" rows="2" placeholder="Terima kasih sudah berbelanja!"
+            class="mt-1 w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm
+                   focus:outline-none focus:ring-2 focus:ring-pink-300 resize-none"></textarea>
+        </div>
+
+        <!-- Generate Button -->
+        <button onclick="generateInvoice()"
+          class="w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold
+                 rounded-xl py-3 text-sm transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-file-arrow-down"></i>
+          Generate & Download Invoice PDF
+        </button>
+
+      </div>
+    </div><!-- /panelInvoice -->
+
+  </main>
+
+  <!-- ═══════════════════════════════════════
+       BOTTOM NAV
+  ═══════════════════════════════════════ -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur border-t border-gray-200
+              flex justify-around items-center px-4 py-2 z-50">
+
+    <button id="navKelas" onclick="switchTab('kelas')"
+      class="nav-btn active flex flex-col items-center gap-0.5 text-xs border-t-2 border-transparent pt-1">
+      <i class="fa-solid fa-book-open text-lg"></i>
+      <span>Kelas</span>
+    </button>
+
+    <button id="navInvoice" onclick="switchTab('invoice')"
+      class="nav-btn flex flex-col items-center gap-0.5 text-xs border-t-2 border-transparent pt-1">
+      <i class="fa-solid fa-file-invoice text-lg"></i>
+      <span>Invoice</span>
+    </button>
+
+  </nav>
+
+  <!-- ═══════════════════════════════════════
+       KELAS SLIDE MODAL (single, reused)
+  ═══════════════════════════════════════ -->
+  <div id="kelasModal"
+    class="modal-panel fixed inset-0 bg-white z-[9999] flex flex-col">
+    <div class="flex items-center justify-between px-5 py-4 border-b">
+      <div>
+        <h2 id="modalTitle" class="text-lg font-semibold text-gray-900"></h2>
+        <p id="modalOrganizer" class="text-sm text-gray-500"></p>
+      </div>
+      <button onclick="closeModal()" class="text-2xl leading-none text-gray-400 hover:text-gray-800">&times;</button>
+    </div>
+    <div id="materialList" class="flex-1 overflow-y-auto divide-y"></div>
   </div>
 
-  <!-- Theme Toggle -->
-  <button
-    onclick="toggleTheme()"
-    class="w-10 h-10 flex items-center justify-center
-           rounded-full bg-gray-100 hover:bg-pink/30
-           transition"
-  >
-    <i id="themeIcon" class="fa-solid fa-moon text-gray-900"></i>
-  </button>
-</header>
+  <!-- ═══════════════════════════════════════
+       INVOICE PREVIEW (off-screen, for PDF)
+  ═══════════════════════════════════════ -->
+  <div id="invoicePreview"></div>
 
-    <!-- Main Content -->
-<main class=" max-w-3xl mx-auto px-6 py-10 text-left">
-
-  <!-- Greeting -->
-  <div class="mb-6">
-    <h1 class="text-lg font-bold text-gray-900 leading-snug">
-      Halo, Fredelida Gamboa Masela 🌱
-    </h1>
-    <p class="text-gray-600 text-sm mt-2">
-      Mau cari materi apa hari ini?
-    </p>
-  </div>
-
-  <!-- Cute Search -->
-  <div class="relative">
-    <input
-      type="text"
-      placeholder="Misal: Kelas Warna Lanjutan. . ."
-      class="w-full rounded-full px-5 py-3 pr-12
-             bg-white/80 backdrop-blur border border-pink-500
-             shadow focus:outline-none focus:ring-2 focus:ring-pink/20
-             placeholder:text-gray-400"
-    />
-    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xl">
-    </span>
-  </div>
-<div class="mt-8">
-  <p class="text-gray-600 text-sm">
-    List Kelas
-  </p>
-  <div class="w-full mt-2 border-b-2 border-gray-900"></div>
-</div>
-
-<div class="grid grid-cols-2 gap-4 mt-5">
-
-  <!-- Card -->
-  <div onclick="openModal({
-       title: 'Kelas Warna Dasar',
-       organizer: 'Sebingkisah',
-       materials: [
-         { name: 'Modul PDF: Teori Warna Dasar', link: 'Teori Warna Dasar.pdf' },
+  <!-- ═══════════════════════════════════════
+       SCRIPTS
+  ═══════════════════════════════════════ -->
+  <script>
+    /* ───────────── DATA ───────────── */
+    const kelasList = [
+      {
+        title: 'Kelas Warna Dasar',
+        organizer: 'Sebingkisah',
+        materials: [
+          { name: 'Modul PDF: Teori Warna Dasar', link: 'Teori Warna Dasar.pdf' },
           { name: 'Modul PDF: Teori Warna Lanjutan', link: 'Materi 6 - Teori Warna Lanjutan.pdf' },
-         { name: 'Link Resource Kelas Warna Lanjutan', link: 'https://bit.ly/WarnaLanjut7' },
-         { name: 'Link Resource Kelas Warna Dasar', link: 'https://bit.ly/WarnaDasar33' },
-         { name: 'Contoh Tugas Kelas Warna Lanjutan', link: 'https://bit.ly/WarnaLanjut7' },
-         { name: 'Rekaman Zoom 2: Value pada Warna Background, Ambience, dll', link: 'https://youtu.be/joG-4rxLVd8' },
-         { name: 'Materi 1: Pengenalan Aplikasi Procreate', link: 'https://youtu.be/rRHLs3iTKrk' },
-{ name: 'Materi 1: Pengenalan Aplikasi Ibis Paint X', link: 'https://youtu.be/VUfDHqQ7fBQ'},
-{ name: 'Video Management Layer Untuk Shading dan Lighting', link: 'https://youtu.be/pNhaeLbrbVI?si=QRBULBaangZvQKD7' },
-{ name: 'Rekaman Zoom 1: Kelas Warna Dasar', link: 'https://youtu.be/bCjqDAiC-KE' },
-{ name: 'Materi 2: Membuat Color Pallete di Procreate', link: 'https://youtu.be/p5yryh6Vpx0' },
-{ name: 'Materi 2: Membuat Color Pallete di Ibis Paint X', link: 'https://youtu.be/5PY6ypjunSs'},
-{ name: 'Sketsa Kelas Warna Dasar', link: 'https://bit.ly/WarnaDasar33' },
-{ name: 'Link Pengumpulan Tugas', link: 'https://drive.google.com/drive/folders/1BY6tq9bXVQioC0sgJXWeLdN3ZEifxHSo' },
-{ name: 'Materi 3: Shading dan Tekstur di Procreate', link: 'https://youtu.be/YLRj5871rfc' },
-{ name: 'Materi 3: Shading dan Tekstur di Ibis Paint X', link: 'https://youtu.be/W3UTXZJwhJE' },
-{ name: 'Materi 4: Pencahayaan di Procreate', link: 'https://youtu.be/iKdTfMWMln0' },        
-{ name: 'Materi 4: Pencahayaan di Ibis Paint X', link: 'https://youtu.be/18ZUS6_DOTQ' },    
-{ name: 'Materi 5: Cahaya Hangat dan Shading Dingin di Procreate', link: 'https://youtu.be/HjAiegJS7NA' },
-{ name: 'Materi 5: Cahaya Hangat dan Shading Dingin di Ibis Paint X', link: 'https://youtu.be/V8HCSOLOUYU' },      
-{ name: 'Materi 7: Item Glow in The Dark - Procreate', link: 'https://youtu.be/ai_4Vw4GofY' },
-{ name: 'Materi 7: Item Glow in The Dark - Ibis Paint', link: 'https://youtu.be/kVwq6ThvGbQ' },
-{ name: 'Materi 8: Mewarnai Environment Pemandangan Cerah - Procreate', link: 'https://youtu.be/D6_3gh8vPAo' },
-{ name: 'Materi 8: Mewarnai Environment Pemandangan Cerah - Ibis Paint', link: 'https://youtu.be/jY-AptDl5Uo' },
-{ name: 'Materi 9: Mengubah Ambience - Procreate', link: 'https://youtu.be/tG5JlL0EAQo' },
-{ name: 'Materi 9: Mengubah Ambience - Ibis Paint', link: 'https://youtu.be/bk2d9rrlGfk' },
-{ name: 'Materi 10: Pencahayaan Berbagai Sisi - Procreate', link: 'https://youtu.be/r_dXIixfcq4' },
-{ name: 'Materi 10: Pencahayaan Berbagai Sisi - Ibis Paint X', link: 'https://youtu.be/snGx3Dx6ozw' },
-{ name: 'Materi 11: Pencahayaan Berbagai Tipe - Procreate', link: 'https://youtu.be/A7qSIWBiPvs' },
-{ name: 'Materi 11: Pencahayaan Berbagai Tipe - Ibis Paint X', link: 'https://youtu.be/Z21Da2cINXI' },
-         { name: 'Review Tugas Kelas Warna Dasar', link: 'https://drive.google.com/drive/folders/1BY6tq9bXVQioC0sgJXWeLdN3ZEifxHSo' },
-{ name: 'Review Tugas Kelas Warna Lanjutan', link: 'https://drive.google.com/drive/folders/1hCTiyCeGAIWnQJRYPi3DQq_fB5TSEOlH?usp=sharing' },
-       ]
-     })" class="card bg-white rounded-2xl shadow-sm overflow-hidden">
-    <img
-      src="kelas-warna.jpg"
-      class="w-full h-28 object-cover"
-      alt="Kelas Warna"
-    >
-    <div class="p-3">
-      <h3 class="text-sm font-semibold text-gray-900 leading-tight">
-        Kelas Warna Dasar
-      </h3>
-      <p class="text-xs text-gray-500 mt-1">
-        by Sebingkisah
-      </p>
-    </div>
-  </div>
-
-<!-- Modal -->
-<div
-  id="modal"
-  class="fixed inset-0 bg-white z-[9999]
-         translate-x-full transition-transform duration-300 ease-out
-         flex flex-col"
->
-  <!-- Header -->
-  <div class="flex items-center justify-between px-5 py-4 border-b">
-    <div>
-      <h2 id="modalTitle" class="text-lg font-semibold text-gray-900"></h2>
-      <p id="modalOrganizer" class="text-sm text-gray-500"></p>
-    </div>
-    <button
-      onclick="closeModal()"
-      class="text-2xl leading-none text-gray-500 hover:text-gray-800"
-    >
-      &times;
-    </button>
-  </div>
-
-  <!-- Body -->
-  <div
-    id="materialList"
-    class="flex-1 overflow-y-auto divide-y"
-  ></div>
-</div>
-
-  <!-- Card -->
- <div onclick="openModalIlustrasi({
-       title: 'Kelas Ilustrasi Cerita Anak Intensif',
-       organizer: 'Sebingkisah',
-       materials: [
-                
-{ name: 'Materi 1: Menggambar Character Berdasarkan Personality', link: 'https://youtu.be/QnzDr3mk-WI'},
-{ name: 'Record Zoom 2 : Story Board Dinamis', link: 'https://youtu.be/6FOx32X5z0U' },
-{ name: 'Materi 2: Setting Canvas dan Thumbnail Story Board', link: 'https://youtu.be/kwmAsOE6ojc?si=8vDNa8LGFt3lFlXu' },
-{ name: 'Materi 3: Mendorong Sudut Pandang Dalam Membuat Storyboard', link: 'https://youtu.be/Ymfoj-6LKpE?si=yB_fzVpERs3ssB19' },
-{ name: 'Record Zoom 3: Story Board Part 2', link: 'https://youtu.be/Monzyd-DXSA?feature=shared' },
-{ name: 'Materi 4: Layout Menggunakan Aplikasi Canva', link: 'https://youtu.be/5JTaAccARTI?si=2bmed-EWaWWnIBx9' },
-{ name: 'Materi 4: Layout Menggunakan Indesign', link: 'https://youtu.be/4eQ99Yhe03o?si=T4L1aitPn2OKGETS' },
-{ name: 'Materi 5: Materi Tentang Font', link: 'https://youtube.com/shorts/iuiNsWsLaQc?si=1wsn0ZhxhhRqyeii' },
-{ name: 'Materi 6: Materi Coloring', link: 'https://youtu.be/eKjUH8jjfiE?feature=shared' },
-{ name: 'Materi 7: Materi Pewarnaan Senang dan Sedih', link: 'https://youtu.be/WzepgU7tSZA' },
-{ name: 'Materi 8: Materi Mockup', link: 'https://youtu.be/huQv6A6GOwA?si=ZuXZxtQ4MJIjP8VP' },
-{ name: 'Materi Tips1: Materi Tips', link: 'https://youtu.be/PR-8DwCtYR0?si=_mqJFPtsatyOD7jt' },
-{ name: 'Materi Tips2: Materi Tips Font', link: 'https://youtube.com/shorts/eS1dS1bYJWg?si=oGar-TZ0TvaOTHag' },
-{ name: 'Link Mockup', link: 'https://bit.ly/ICAintensif97' },
-{ name: 'Materi Tips3: Materi Tips Layout di ibis paint', link: 'https://youtu.be/OnljzEkznxM?si=FdZ4CJ0BkIasCU3m' },
-{ name: 'Materi Tips4: Materi Tips Input Nomor di ibis paint', link: 'https://youtu.be/ak6DQiwnkD0?si=2BBjxTlvYw_7tsGd' },
-{ name: 'Materi Tips5: Materi Tips Tutorial Membuat Punggung Buku', link: 'https://youtu.be/l7o5apEBh94?si=dyAYKSQm5Ia227_A' },
-{ name: 'Materi Tips6: Materi Tips Seputar Canvas Cover', link: 'https://youtu.be/_YmKdBqLM44?si=LXSLePwBVvIBUbys' },
-{ name: 'Link tugas: Link Tugas', link: 'https://drive.google.com/drive/folders/1GiyCuiYI_Edm_RUpKzi6ljxLsJbUowQZ' },
-         { name: 'Sefruit Tips', link: 'https://www.instagram.com/s/aGlnaGxpZ2h0OjE3ODc1NjExNzM4MTY2NjMz?story_media_id=3550263491221334203&igsh=MTl3ZHVvNTllOHN6bA==' },
-         { name: 'Modul PDF 1', link: 'Tips Menggambar Karakter Unik.pdf' },
-         { name: 'Modul PDF 2', link: 'Membuat Storyboard yang Dinamis 1.pdf' },
-         { name: 'Modul PDF 3', link: 'Membuat Storyboard yang Dinamis sesi 2.pdf' },
-         { name: 'Modul PDF 4', link: 'STRATEGI PO - ICA INTENSIF.pdf' },
-      ]
-    })" class="bg-white rounded-2xl shadow-sm overflow-hidden">
-    <img
-      src="ilustrasi-cerita-anak-intensif.jpg"
-      class="w-full h-28 object-cover"
-      alt="Kelas"
-    >
-    <div class="p-3">
-      <h3 class="text-sm font-semibold text-gray-900 leading-tight">
-        Ilustrasi Cerita Anak Intensif
-      </h3>
-      <p class="text-xs text-gray-500 mt-1">
-        by Sebingkisah
-      </p>
-    </div>
-  </div>
-  
-  <div
-  id="modalIlustrasi"
-  class="fixed inset-0 bg-white z-[9999]
-         translate-x-full transition-transform duration-300 ease-out
-         flex flex-col"
->
-  <!-- Header -->
-  <div class="flex items-center justify-between px-5 py-4 border-b">
-    <div>
-      <h2 id="modalTitleIlustrasi" class="text-lg font-semibold text-gray-900"></h2>
-      <p id="modalOrganizerIlustrasi" class="text-sm text-gray-500"></p>
-    </div>
-    <button
-      onclick="closeModalIlustrasi()"
-      class="text-2xl leading-none text-gray-500 hover:text-gray-800"
-    >
-      &times;
-    </button>
-  </div>
-
-  <!-- Body -->
-  <div
-    id="materialListIlustrasi"
-    class="flex-1 overflow-y-auto divide-y"
-  ></div>
-</div>
-  
-    <!-- Card -->
-  <div onclick="openModalEYC({
-       title: 'Kelas Explore Your Character',
-       organizer: 'Sebingkisah',
-       materials: [
-                  { name: 'List Materi & Rekomendasi Brush', link: 'https://bit.ly/EYCresource314' },
-         { name: 'Prospek Kerja Ilustrator PDF', link: 'Prospek Kerja Ilustrator.pdf' },
-{ name: 'Record Zoom: Prospek Kerja Ilustrator', link: 'https://youtu.be/Vw4905c7dhU' },
-{ name: 'Materi 1: Pengenalan Aplikasi Procreate', link: 'https://youtu.be/rRHLs3iTKrk'},
-{ name: 'Materi 1: Pengenalan Aplikasi Ibis Paint X', link: 'https://youtu.be/VUfDHqQ7fBQ' },
-{ name: 'Materi 2: Dasar Sketsa Wajah', link: 'https://youtu.be/Ww7kjjyOPU4' },
-{ name: 'Materi 3: Menggambar Berbagai Rambut & Hijab', link: 'https://youtu.be/1ENwc2-bv7A' },
-{ name: 'Materi 4: Menggambar Ekspresi Wajah', link: 'https://youtu.be/6FkC_tIx63o' },
-{ name: 'Materi 5: Sketsa Wajah Berdasarkan Umur', link: 'https://youtu.be/-N-lm6y9Glk' },
-{ name: 'Materi 6: Dasar Anatomi Tubuh', link: 'https://youtu.be/PVH44upDPMU' },
-{ name: 'Materi 7: Anatomi Tubuh berdasarkan Umur', link: 'https://youtu.be/OuTtWUsqP4E' },
-{ name: 'Materi 8: Menggambar Berbagai Pose', link: 'https://youtu.be/tQ9OWEBLVB4' },
-{ name: 'Materi 9: Full Character & Coloring', link: 'https://youtu.be/Kto5EpiVhC8' },
-{ name: 'Materi Reels', link: 'https://www.instagram.com/p/DRO9KgJEjmV/?img_index=5&igsh=cG56aGdmMWtnbjVm' },
-{ name: 'Link Pengumpulan Tugas & Hasil Review', link: 'https://drive.google.com/drive/folders/1kYYZNsWRHQiVFbovYTICaD2vx6CPFYNY' }
-       ]
-     })" class="bg-white rounded-2xl shadow-sm overflow-hidden">
-    <img
-      src="explore-character.jpg"
-      class="w-full h-28 object-cover"
-      alt="Kelas"
-    >
-    <div class="p-3">
-      <h3 class="text-sm font-semibold text-gray-900 leading-tight">
-        Explore Your Character
-      </h3>
-      <p class="text-xs text-gray-500 mt-1">
-        by Sebingkisah
-      </p>
-    </div>
-  </div>
-
-<div
-  id="modalEYC"
-  class="fixed inset-0 bg-white z-[9999]
-         translate-x-full transition-transform duration-300 ease-out
-         flex flex-col"
->
-  <!-- Header -->
-  <div class="flex items-center justify-between px-5 py-4 border-b">
-    <div>
-      <h2 id="modalTitleEYC" class="text-lg font-semibold text-gray-900"></h2>
-      <p id="modalOrganizerEYC" class="text-sm text-gray-500"></p>
-    </div>
-    <button
-      onclick="closeModalEYC()"
-      class="text-2xl leading-none text-gray-500 hover:text-gray-800"
-    >
-      &times;
-    </button>
-  </div>
-
-  <!-- Body -->
-  <div
-    id="materialListEYC"
-    class="flex-1 overflow-y-auto divide-y"
-  ></div>
-</div>
-  
-  <!-- Card -->
-  <div onclick="openModalKomposisi({
-       title: 'Kelas Komposisi & Cover Book',
-       organizer: 'Sebingkisah',
-       materials: [
-                  { name: 'Link List Materi', link: 'https://bit.ly/komposisiASIK' },
-         { name: 'Materi Komposisi PDF', link: 'Komposisi.pdf' },
-{ name: 'Pilihan Focal Point, Ritme & Tata Letak', link: 'IMG-20260121-WA0011.jpg' },
-{ name: 'Cara Ubah Warna jadi Grayscale', link: 'https://youtube.com/shorts/rbeacXTRsUw?si=nZCWv9V21kVMbyH_' },
-{ name: 'Rekaman Zoom Kelas Komposisi', link: 'https://youtu.be/P0QGYFY0PkE' },
-{ name: 'Video Tutorial 1: Ukuran, Diagonal, Progresif', link: 'https://youtu.be/FhS-uCxmx8c?si=CbTfggyHooqVwKpf' },
-{ name: 'Video Tutorial 2: Color Value, Rule of Third, Reguler', link: 'https://youtu.be/i1SHcUG8dWA?si=7wBzWRsZUWTDG7ZL' },
-{ name: 'Video Tutorial 3: Ukuran dan Alur Pandang, Progresif, Unbalance', link: 'https://youtu.be/b85kjSzHIPU?si=mLirW_teWHUh3kwH' },
-{ name: 'Video Tutorial 4: Ukuran, Acak, Golden Spiral', link: 'https://youtu.be/cueSUB5X3vU?si=dTAVt_pZDALlqlIs' },
-{ name: 'Materi Cover Book PDF', link: 'Konsep Visual Cover Book.pdf' },
-{ name: 'Contoh Layout Tugas Cover Book', link: 'IMG-20260128-WA0016.jpg' },
-{ name: 'Rekaman Zoom Kelas Cover Book', link: 'https://youtu.be/KG24JCZcZWs' },
-{ name: 'Materi 2: Do & Donts dalam Membuat Cover Book', link: 'https://youtu.be/mUTU8PIfzZs?si=QaqBUhZe_ZhrQ-_K' },
-{ name: 'Materi 3: Komposisi Rule of Third, Contoh Perspektif, dan Persiapan Project', link: 'https://youtu.be/wwAKxnvqzn8' },
-{ name: 'Lettering Judul Cover Book - Ibis Paint', link: 'https://youtu.be/XoDAhOtlNNo' },
-{ name: 'Lettering Judul Cover Book - Procreate', link: 'https://youtu.be/ktDw9Tly2DM' },
-{ name: 'Materi Komposisi Cover Book', link: 'https://youtu.be/f2qzcUpW-gA' },
-{ name: 'Template Cover Book', link: 'https://bit.ly/coverbookmilkha' },
-{ name: 'Link Pengumpulan Tugas Cover Book', link: 'https://drive.google.com/drive/folders/1q15uDXI6Nz_tnYV36tVS-iyw__l3oUq5' },
-{ name: 'Link Pengumpulan Tugas Komposisi', link: 'https://drive.google.com/drive/u/4/folders/1fV33SGxwGsbasBgyrlVF7wy_a08PI564' },
-       ]
-     })" class="bg-white rounded-2xl shadow-sm overflow-hidden">
-    <img
-      src="komposisi.jpg"
-      class="w-full h-28 object-cover"
-      alt="Kelas"
-    >
-    <div class="p-3">
-      <h3 class="text-sm font-semibold text-gray-900 leading-tight">
-        Komposisi dan Cover Book
-      </h3>
-      <p class="text-xs text-gray-500 mt-1">
-        by Sebingkisah
-      </p>
-    </div>
-  </div>
-
-<div
-  id="modalKomposisi"
-  class="fixed inset-0 bg-white z-[9999]
-         translate-x-full transition-transform duration-300 ease-out
-         flex flex-col"
->
-  <!-- Header -->
-  <div class="flex items-center justify-between px-5 py-4 border-b">
-    <div>
-      <h2 id="modalTitleKomposisi" class="text-lg font-semibold text-gray-900"></h2>
-      <p id="modalOrganizerKomposisi" class="text-sm text-gray-500"></p>
-    </div>
-    <button
-      onclick="closeModalKomposisi()"
-      class="text-2xl leading-none text-gray-500 hover:text-gray-800"
-    >
-      &times;
-    </button>
-  </div>
-
-  <!-- Body -->
-  <div
-    id="materialListKomposisi"
-    class="flex-1 overflow-y-auto divide-y"
-  ></div>
-</div>
-
-<div onclick="openModalPencahayaan({
-       title: 'Kelas Pencahayaan',
-       organizer: 'Sebingkisah',
-       materials: [
-         { name: 'Rekaman Zoom', link: 'https://youtu.be/uTyEgIlZE10?si=QtUBWN0s-Kfoetwn' },
+          { name: 'Link Resource Kelas Warna Lanjutan', link: 'https://bit.ly/WarnaLanjut7' },
+          { name: 'Link Resource Kelas Warna Dasar', link: 'https://bit.ly/WarnaDasar33' },
+          { name: 'Contoh Tugas Kelas Warna Lanjutan', link: 'https://bit.ly/WarnaLanjut7' },
+          { name: 'Rekaman Zoom 2: Value pada Warna Background, Ambience, dll', link: 'https://youtu.be/joG-4rxLVd8' },
+          { name: 'Materi 1: Pengenalan Aplikasi Procreate', link: 'https://youtu.be/rRHLs3iTKrk' },
+          { name: 'Materi 1: Pengenalan Aplikasi Ibis Paint X', link: 'https://youtu.be/VUfDHqQ7fBQ' },
+          { name: 'Video Management Layer Untuk Shading dan Lighting', link: 'https://youtu.be/pNhaeLbrbVI' },
+          { name: 'Rekaman Zoom 1: Kelas Warna Dasar', link: 'https://youtu.be/bCjqDAiC-KE' },
+          { name: 'Materi 2: Membuat Color Pallete di Procreate', link: 'https://youtu.be/p5yryh6Vpx0' },
+          { name: 'Materi 2: Membuat Color Pallete di Ibis Paint X', link: 'https://youtu.be/5PY6ypjunSs' },
+          { name: 'Sketsa Kelas Warna Dasar', link: 'https://bit.ly/WarnaDasar33' },
+          { name: 'Link Pengumpulan Tugas', link: 'https://drive.google.com/drive/folders/1BY6tq9bXVQioC0sgJXWeLdN3ZEifxHSo' },
+          { name: 'Materi 3: Shading dan Tekstur di Procreate', link: 'https://youtu.be/YLRj5871rfc' },
+          { name: 'Materi 3: Shading dan Tekstur di Ibis Paint X', link: 'https://youtu.be/W3UTXZJwhJE' },
+          { name: 'Materi 4: Pencahayaan di Procreate', link: 'https://youtu.be/iKdTfMWMln0' },
+          { name: 'Materi 4: Pencahayaan di Ibis Paint X', link: 'https://youtu.be/18ZUS6_DOTQ' },
+          { name: 'Materi 5: Cahaya Hangat dan Shading Dingin di Procreate', link: 'https://youtu.be/HjAiegJS7NA' },
+          { name: 'Materi 5: Cahaya Hangat dan Shading Dingin di Ibis Paint X', link: 'https://youtu.be/V8HCSOLOUYU' },
+          { name: 'Materi 7: Item Glow in The Dark - Procreate', link: 'https://youtu.be/ai_4Vw4GofY' },
+          { name: 'Materi 7: Item Glow in The Dark - Ibis Paint', link: 'https://youtu.be/kVwq6ThvGbQ' },
+          { name: 'Materi 8: Mewarnai Environment Pemandangan Cerah - Procreate', link: 'https://youtu.be/D6_3gh8vPAo' },
+          { name: 'Materi 8: Mewarnai Environment Pemandangan Cerah - Ibis Paint', link: 'https://youtu.be/jY-AptDl5Uo' },
+          { name: 'Materi 9: Mengubah Ambience - Procreate', link: 'https://youtu.be/tG5JlL0EAQo' },
+          { name: 'Materi 9: Mengubah Ambience - Ibis Paint', link: 'https://youtu.be/bk2d9rrlGfk' },
+          { name: 'Materi 10: Pencahayaan Berbagai Sisi - Procreate', link: 'https://youtu.be/r_dXIixfcq4' },
+          { name: 'Materi 10: Pencahayaan Berbagai Sisi - Ibis Paint X', link: 'https://youtu.be/snGx3Dx6ozw' },
+          { name: 'Materi 11: Pencahayaan Berbagai Tipe - Procreate', link: 'https://youtu.be/A7qSIWBiPvs' },
+          { name: 'Materi 11: Pencahayaan Berbagai Tipe - Ibis Paint X', link: 'https://youtu.be/Z21Da2cINXI' },
+          { name: 'Review Tugas Kelas Warna Dasar', link: 'https://drive.google.com/drive/folders/1BY6tq9bXVQioC0sgJXWeLdN3ZEifxHSo' },
+          { name: 'Review Tugas Kelas Warna Lanjutan', link: 'https://drive.google.com/drive/folders/1hCTiyCeGAIWnQJRYPi3DQq_fB5TSEOlH' },
+        ]
+      },
+      {
+        title: 'Kelas Ilustrasi Cerita Anak Intensif',
+        organizer: 'Sebingkisah',
+        materials: [
+          { name: 'Materi 1: Menggambar Character Berdasarkan Personality', link: 'https://youtu.be/QnzDr3mk-WI' },
+          { name: 'Record Zoom 2: Story Board Dinamis', link: 'https://youtu.be/6FOx32X5z0U' },
+          { name: 'Materi 2: Setting Canvas dan Thumbnail Story Board', link: 'https://youtu.be/kwmAsOE6ojc' },
+          { name: 'Materi 3: Mendorong Sudut Pandang Dalam Membuat Storyboard', link: 'https://youtu.be/Ymfoj-6LKpE' },
+          { name: 'Record Zoom 3: Story Board Part 2', link: 'https://youtu.be/Monzyd-DXSA' },
+          { name: 'Materi 4: Layout Menggunakan Aplikasi Canva', link: 'https://youtu.be/5JTaAccARTI' },
+          { name: 'Materi 4: Layout Menggunakan Indesign', link: 'https://youtu.be/4eQ99Yhe03o' },
+          { name: 'Materi 5: Materi Tentang Font', link: 'https://youtube.com/shorts/iuiNsWsLaQc' },
+          { name: 'Materi 6: Materi Coloring', link: 'https://youtu.be/eKjUH8jjfiE' },
+          { name: 'Materi 7: Materi Pewarnaan Senang dan Sedih', link: 'https://youtu.be/WzepgU7tSZA' },
+          { name: 'Materi 8: Materi Mockup', link: 'https://youtu.be/huQv6A6GOwA' },
+          { name: 'Materi Tips 1: Tips Umum', link: 'https://youtu.be/PR-8DwCtYR0' },
+          { name: 'Materi Tips 2: Tips Font', link: 'https://youtube.com/shorts/eS1dS1bYJWg' },
+          { name: 'Link Mockup', link: 'https://bit.ly/ICAintensif97' },
+          { name: 'Materi Tips 3: Layout di Ibis Paint', link: 'https://youtu.be/OnljzEkznxM' },
+          { name: 'Materi Tips 4: Input Nomor di Ibis Paint', link: 'https://youtu.be/ak6DQiwnkD0' },
+          { name: 'Materi Tips 5: Tutorial Membuat Punggung Buku', link: 'https://youtu.be/l7o5apEBh94' },
+          { name: 'Materi Tips 6: Seputar Canvas Cover', link: 'https://youtu.be/_YmKdBqLM44' },
+          { name: 'Link Tugas', link: 'https://drive.google.com/drive/folders/1GiyCuiYI_Edm_RUpKzi6ljxLsJbUowQZ' },
+          { name: 'Sefruit Tips', link: 'https://www.instagram.com/s/aGlnaGxpZ2h0OjE3ODc1NjExNzM4MTY2NjMz' },
+          { name: 'Modul PDF 1: Tips Menggambar Karakter Unik', link: 'Tips Menggambar Karakter Unik.pdf' },
+          { name: 'Modul PDF 2: Storyboard Dinamis 1', link: 'Membuat Storyboard yang Dinamis 1.pdf' },
+          { name: 'Modul PDF 3: Storyboard Dinamis 2', link: 'Membuat Storyboard yang Dinamis sesi 2.pdf' },
+          { name: 'Modul PDF 4: Strategi PO ICA Intensif', link: 'STRATEGI PO - ICA INTENSIF.pdf' },
+        ]
+      },
+      {
+        title: 'Kelas Explore Your Character',
+        organizer: 'Sebingkisah',
+        materials: [
+          { name: 'List Materi & Rekomendasi Brush', link: 'https://bit.ly/EYCresource314' },
+          { name: 'Prospek Kerja Ilustrator PDF', link: 'Prospek Kerja Ilustrator.pdf' },
+          { name: 'Record Zoom: Prospek Kerja Ilustrator', link: 'https://youtu.be/Vw4905c7dhU' },
+          { name: 'Materi 1: Pengenalan Aplikasi Procreate', link: 'https://youtu.be/rRHLs3iTKrk' },
+          { name: 'Materi 1: Pengenalan Aplikasi Ibis Paint X', link: 'https://youtu.be/VUfDHqQ7fBQ' },
+          { name: 'Materi 2: Dasar Sketsa Wajah', link: 'https://youtu.be/Ww7kjjyOPU4' },
+          { name: 'Materi 3: Menggambar Berbagai Rambut & Hijab', link: 'https://youtu.be/1ENwc2-bv7A' },
+          { name: 'Materi 4: Menggambar Ekspresi Wajah', link: 'https://youtu.be/6FkC_tIx63o' },
+          { name: 'Materi 5: Sketsa Wajah Berdasarkan Umur', link: 'https://youtu.be/-N-lm6y9Glk' },
+          { name: 'Materi 6: Dasar Anatomi Tubuh', link: 'https://youtu.be/PVH44upDPMU' },
+          { name: 'Materi 7: Anatomi Tubuh berdasarkan Umur', link: 'https://youtu.be/OuTtWUsqP4E' },
+          { name: 'Materi 8: Menggambar Berbagai Pose', link: 'https://youtu.be/tQ9OWEBLVB4' },
+          { name: 'Materi 9: Full Character & Coloring', link: 'https://youtu.be/Kto5EpiVhC8' },
+          { name: 'Materi Reels', link: 'https://www.instagram.com/p/DRO9KgJEjmV/' },
+          { name: 'Link Pengumpulan Tugas & Hasil Review', link: 'https://drive.google.com/drive/folders/1kYYZNsWRHQiVFbovYTICaD2vx6CPFYNY' },
+        ]
+      },
+      {
+        title: 'Kelas Komposisi dan Cover Book',
+        organizer: 'Sebingkisah',
+        materials: [
+          { name: 'Link List Materi', link: 'https://bit.ly/komposisiASIK' },
+          { name: 'Materi Komposisi PDF', link: 'Komposisi.pdf' },
+          { name: 'Pilihan Focal Point, Ritme & Tata Letak', link: 'IMG-20260121-WA0011.jpg' },
+          { name: 'Cara Ubah Warna jadi Grayscale', link: 'https://youtube.com/shorts/rbeacXTRsUw' },
+          { name: 'Rekaman Zoom Kelas Komposisi', link: 'https://youtu.be/P0QGYFY0PkE' },
+          { name: 'Video Tutorial 1: Ukuran, Diagonal, Progresif', link: 'https://youtu.be/FhS-uCxmx8c' },
+          { name: 'Video Tutorial 2: Color Value, Rule of Third, Reguler', link: 'https://youtu.be/i1SHcUG8dWA' },
+          { name: 'Video Tutorial 3: Ukuran dan Alur Pandang, Progresif, Unbalance', link: 'https://youtu.be/b85kjSzHIPU' },
+          { name: 'Video Tutorial 4: Ukuran, Acak, Golden Spiral', link: 'https://youtu.be/cueSUB5X3vU' },
+          { name: 'Materi Cover Book PDF', link: 'Konsep Visual Cover Book.pdf' },
+          { name: 'Contoh Layout Tugas Cover Book', link: 'IMG-20260128-WA0016.jpg' },
+          { name: 'Rekaman Zoom Kelas Cover Book', link: 'https://youtu.be/KG24JCZcZWs' },
+          { name: 'Materi 2: Do & Donts dalam Membuat Cover Book', link: 'https://youtu.be/mUTU8PIfzZs' },
+          { name: 'Materi 3: Komposisi Rule of Third & Perspektif', link: 'https://youtu.be/wwAKxnvqzn8' },
+          { name: 'Lettering Judul Cover Book - Ibis Paint', link: 'https://youtu.be/XoDAhOtlNNo' },
+          { name: 'Lettering Judul Cover Book - Procreate', link: 'https://youtu.be/ktDw9Tly2DM' },
+          { name: 'Materi Komposisi Cover Book', link: 'https://youtu.be/f2qzcUpW-gA' },
+          { name: 'Template Cover Book', link: 'https://bit.ly/coverbookmilkha' },
+          { name: 'Link Pengumpulan Tugas Cover Book', link: 'https://drive.google.com/drive/folders/1q15uDXI6Nz_tnYV36tVS-iyw__l3oUq5' },
+          { name: 'Link Pengumpulan Tugas Komposisi', link: 'https://drive.google.com/drive/u/4/folders/1fV33SGxwGsbasBgyrlVF7wy_a08PI564' },
+        ]
+      },
+      {
+        title: 'Kelas Pencahayaan',
+        organizer: 'Sebingkisah',
+        materials: [
+          { name: 'Rekaman Zoom', link: 'https://youtu.be/uTyEgIlZE10' },
           { name: 'Link Brush 🖌️', link: 'http://bit.ly/4u45dZe' },
-         { name: 'Materi 1 - Pencahayaan Dasar Objek 3D', link: 'https://youtu.be/61caLQuyRkk?si=qiwBwpV_Fy2_jpD' },
-         { name: 'Materi 2 - Berbagai Arah Cahaya Objek 3D', link: 'https://youtu.be/E2a4wAUGdRI?si=KBuzxZodOk_n8Rqb' },
-         { name: 'Materi 3 - Rim Light dan Reflected Cahaya', link: 'https://youtu.be/81MXMBFAmX4?si=5IrJOVFaS6aW2XJ3' },
-         { name: 'Materi 4 - Beragam Cahaya dan Pantulannya', link: 'https://youtu.be/jjCks6W-BOk?si=eKjUZfQQ3DG1Zvqa' },
-         { name: 'Materi 5 - Penambahan Detail', link: 'https://youtu.be/BFhuZrBdN8E?si=9rTHAnaO6fVbYPoV' },
-         { name: 'Materi 6 - Pemilihan Warna dan Bayangan', link: 'https://youtu.be/97TgyoRV8n4?si=wE82xBE8hwAYtA0U'},
-         { name: 'Materi 7 - Penerapan Warna untuk Cahaya dan Bayangan', link: 'https://youtu.be/oewwTW3tINU?si=Nkc8kVfAMYl0r4bl' },
-         { name: 'Materi 8 - Shadow untuk Objek Berdekatan', link: 'https://youtu.be/b_49MZJWfbk?si=PU21l06HWAVo7N3J' },
-        { name: 'Link Pengumpulan Tugas', link: 'https://drive.google.com/drive/folders/1Bzfj9Kk4SBFZEEZqGB6sQcG3nISjmEy6' },
-       ]
-     })" class="card bg-white rounded-2xl shadow-sm overflow-hidden">
-    <img
-      src="kelas-pencahayaan.jpg"
-      class="w-full h-28 object-cover"
-      alt="Kelas Pencahayaan"
-    >
-    <div class="p-3">
-      <h3 class="text-sm font-semibold text-gray-900 leading-tight">
-        Kelas Pencahayaan
-      </h3>
-      <p class="text-xs text-gray-500 mt-1">
-        by Sebingkisah
-      </p>
-    </div>
-  </div>
-
-<!-- Modal -->
-<div
-  id="modalPencahayaan"
-  class="fixed inset-0 bg-white z-[9999]
-         translate-x-full transition-transform duration-300 ease-out
-         flex flex-col"
->
-  <!-- Header -->
-  <div class="flex items-center justify-between px-5 py-4 border-b">
-    <div>
-      <h2 id="modalTitlePencahayaan" class="text-lg font-semibold text-gray-900"></h2>
-      <p id="modalOrganizerPencahayaan" class="text-sm text-gray-500"></p>
-    </div>
-    <button
-      onclick="closeModalPencahayaan()"
-      class="text-2xl leading-none text-gray-500 hover:text-gray-800"
-    >
-      &times;
-    </button>
-  </div>
-
-  <!-- Body -->
-  <div
-    id="materialListPencahayaan"
-    class="flex-1 overflow-y-auto divide-y"
-  ></div>
-</div>
-
-<div onclick="openModalPerspektif({
-       title: 'Kelas Perspektif Buku Anak',
-       organizer: 'Sebingkisah',
-       materials: [
-         { name: 'Rekaman Zoom', link: 'https://youtu.be/KZLwpTQzl5E?si=2PTFpDlZuv318SV-' },
+          { name: 'Materi 1: Pencahayaan Dasar Objek 3D', link: 'https://youtu.be/61caLQuyRkk' },
+          { name: 'Materi 2: Berbagai Arah Cahaya Objek 3D', link: 'https://youtu.be/E2a4wAUGdRI' },
+          { name: 'Materi 3: Rim Light dan Reflected Cahaya', link: 'https://youtu.be/81MXMBFAmX4' },
+          { name: 'Materi 4: Beragam Cahaya dan Pantulannya', link: 'https://youtu.be/jjCks6W-BOk' },
+          { name: 'Materi 5: Penambahan Detail', link: 'https://youtu.be/BFhuZrBdN8E' },
+          { name: 'Materi 6: Pemilihan Warna dan Bayangan', link: 'https://youtu.be/97TgyoRV8n4' },
+          { name: 'Materi 7: Penerapan Warna untuk Cahaya dan Bayangan', link: 'https://youtu.be/oewwTW3tINU' },
+          { name: 'Materi 8: Shadow untuk Objek Berdekatan', link: 'https://youtu.be/b_49MZJWfbk' },
+          { name: 'Link Pengumpulan Tugas', link: 'https://drive.google.com/drive/folders/1Bzfj9Kk4SBFZEEZqGB6sQcG3nISjmEy6' },
+        ]
+      },
+      {
+        title: 'Kelas Perspektif Buku Anak',
+        organizer: 'Sebingkisah',
+        materials: [
+          { name: 'Rekaman Zoom', link: 'https://youtu.be/KZLwpTQzl5E' },
           { name: 'Modul PDF Materi Perspektif', link: 'kelas-perspektif.pdf' },
-         { name: 'Materi 1 - Jenis - Jenis Perspektif', link: 'https://youtu.be/N2_ug9tbNmc?si=Btvj2MyBrYvJ5t3m' },
-         { name: 'Materi 2 - Penerapan Grid Perspektif', link: 'https://youtu.be/8gfSZHAMryY?si=ieEf2VPakTjEV95s' },
-         { name: 'Materi 3 - Membangun Background', link: 'https://youtu.be/M0x9taopT58?si=LK4UwbUmSttNGrce' },
-         { name: 'Materi 4 - Menambahkan Objek dan Karakter Menggunakan Perspektif', link: 'https://youtu.be/NYp8k384EO4?si=VmgwTla-jT90s4oG' },
-         { name: 'Materi 5 - Membuat Adegan Ilustrasi Utuh', link: 'https://youtu.be/m57ItPvPaow?si=eVWOVAgXjkjUWtlr'},
-        { name: 'Materi Bonus', link: 'https://youtu.be/j6VURSGXiRY?si=XdlfXun8qlQuHQVO' },
-         { name: 'Link Pengumpulan Tugas', link: 'https://drive.google.com/drive/folders/1lPcpKWitUD7R7WcrdWxflE8BK0RMnhY_' },
-         { name: 'Template Canvas', link: 'https://drive.google.com/drive/folders/1iSd4J-Ed-X1CxzRafGwK95idWH1ejvfnhttps://drive.google.com/drive/folders/1SLdOi6WcLpjsP4LjQwiiP9YDBkchfga3' },
-        { name: 'Rangkuman Materi 1', link: 'materi1.jpg' },
-        { name: 'Sketsa Rumah Pohon', link: 'sketsa-rumahpohon.jpg' },
-        { name: 'Hasil Jadi Rumah Pohon', link: 'hasil-rumahpohon.jpg' },
-        { name: 'Contoh Tugas', link: 'contoh-tugas.jpg' },
-        { name: 'Playlist Kelas Perspektif', link: 'https://youtube.com/playlist?list=PL_ioycqzvGn61dY28sgfsnbGNrYgXnkAv&si=Ri5cWdfiGjY2hCp7' },
-       ]
-     })" class="card bg-white rounded-2xl shadow-sm overflow-hidden">
-    <img
-      src="kelas-perspektif.jpg"
-      class="w-full h-28 object-cover"
-      alt="Kelas Perspektif"
-    >
-    <div class="p-3">
-      <h3 class="text-sm font-semibold text-gray-900 leading-tight">
-        Kelas Perspektif
-      </h3>
-      <p class="text-xs text-gray-500 mt-1">
-        by Sebingkisah
-      </p>
-    </div>
-  </div>
+          { name: 'Materi 1: Jenis-Jenis Perspektif', link: 'https://youtu.be/N2_ug9tbNmc' },
+          { name: 'Materi 2: Penerapan Grid Perspektif', link: 'https://youtu.be/8gfSZHAMryY' },
+          { name: 'Materi 3: Membangun Background', link: 'https://youtu.be/M0x9taopT58' },
+        ]
+      },
+    ];
 
-<!-- Modal -->
-<div
-  id="modalPerspektif"
-  class="fixed inset-0 bg-white z-[9999]
-         translate-x-full transition-transform duration-300 ease-out
-         flex flex-col"
->
-  <!-- Header -->
-  <div class="flex items-center justify-between px-5 py-4 border-b">
-    <div>
-      <h2 id="modalTitlePerspektif" class="text-lg font-semibold text-gray-900"></h2>
-      <p id="modalOrganizerPerspektif" class="text-sm text-gray-500"></p>
-    </div>
-    <button
-      onclick="closeModalPerspektif()"
-      class="text-2xl leading-none text-gray-500 hover:text-gray-800"
-    >
-      &times;
-    </button>
-  </div>
-
-  <!-- Body -->
-  <div
-    id="materialListPerspektif"
-    class="flex-1 overflow-y-auto divide-y"
-  ></div>
-</div>
-
-</div>
-
-<nav
-  class="fixed bottom-6 left-1/2 -translate-x-1/2
-         w-[80%] max-w-md
-         bg-pink-300/90 backdrop-blur
-         rounded-full shadow-xl
-         px-4 py-3"
->
-  <ul class="flex items-center justify-between">
-
-    <!-- Beranda -->
-    <li>
-      <button
-        onclick="setActive(this)"
-        class="flex items-center gap-2 px-3 py-2 rounded-full
-               bg-white text-black
-               transition-all duration-300"
-      >
-        <i class="fa-solid fa-house text-lg"></i>
-        <span class="text-sm font-medium">Beranda</span>
-      </button>
-    </li>
-
-    <!-- Materi -->
-    <li>
-      <button
-        onclick="setActive(this)"
-        class="group flex items-center gap-2 px-3 py-2 rounded-full
-               text-gray-600 hover:text-black
-               transition-all duration-300"
-      >
-        <i class="fa-solid fa-book-open text-lg"></i>
-        <span class="hidden group-[.active]:inline text-sm font-medium">
-          Materi
-        </span>
-      </button>
-    </li>
-
-    <!-- Alat -->
-    <li>
-      <button
-        onclick="setActive(this)"
-        class="group flex items-center gap-2 px-3 py-2 rounded-full
-               text-gray-600 hover:text-black
-               transition-all duration-300"
-      >
-        <i class="fa-solid fa-screwdriver-wrench text-lg"></i>
-        <span class="hidden group-[.active]:inline text-sm font-medium">
-          Alat
-        </span>
-      </button>
-    </li>
-
-    <!-- Tentang -->
-    <li>
-      <button
-        onclick="setActive(this)"
-        class="group flex items-center gap-2 px-3 py-2 rounded-full
-               text-gray-600 hover:text-black
-               transition-all duration-300"
-      >
-        <i class="fa-solid fa-circle-info text-lg"></i>
-        <span class="hidden group-[.active]:inline text-sm font-medium">
-          Tentang
-        </span>
-      </button>
-    </li>
-
-  </ul>
-</nav>
-</main>
-
-<script>
-
-function isShortUrl(link) {
-  const shortDomains = ['bit.ly', 't.co', 'tinyurl.com', 'goo.gl', 'cutt.ly'];
-  return shortDomains.some(domain => link.includes(domain));
-}
-
-function isYouTube(link) {
-  return link.includes('youtube.com') || link.includes('youtu.be');
-}
-
-function getYoutubeId(link) {
-  if (link.includes('v=')) {
-    return link.split('v=')[1].split('&')[0];
-  }
-  if (link.includes('youtu.be/')) {
-    return link.split('youtu.be/')[1].split('?')[0];
-  }
-  return null;
-}
-
-function isInstagram(link) {
-  return /instagram\.com\/(p|reel|tv)/i.test(link);
-}
-
-function isGoogleDrive(link) {
-  return /drive\.google\.com/i.test(link);
-}
-
-function getDrivePreviewLink(link) {
-  // ubah link drive jadi preview
-  // contoh:
-  // https://drive.google.com/file/d/FILE_ID/view
-  // jadi:
-  // https://drive.google.com/file/d/FILE_ID/preview
-  return link.replace('/view', '/preview');
-}
-  
-  function setActive(el) {
-    document.querySelectorAll('nav button').forEach(btn => {
-      btn.classList.remove('active', 'bg-white', 'text-black')
-      btn.classList.add('text-gray-600')
-      btn.querySelector('span')?.classList.add('hidden')
-    })
-
-    el.classList.add('active', 'bg-white', 'text-black')
-    el.classList.remove('text-gray-600')
-    el.querySelector('span')?.classList.remove('hidden')
-  }
-  
-function toggleTheme() {
-    const icon = document.getElementById('themeIcon')
-    document.documentElement.classList.toggle('dark')
-
-    if (icon.classList.contains('fa-moon')) {
-      icon.classList.replace('fa-moon', 'fa-sun')
-    } else {
-      icon.classList.replace('fa-sun', 'fa-moon')
-    }
-  }
-
-function openModal(data) {
-  document.getElementById('modal').classList.remove('translate-x-full');
-  document.getElementById('modalTitle').textContent = data.title;
-  document.getElementById('modalOrganizer').textContent = 'by ' + data.organizer;
-
-  const list = document.getElementById('materialList');
-  list.innerHTML = '';
-
-  data.materials.forEach((item, index) => {
-    const row = document.createElement('div');
-    row.className = 'p-4';
-
-    row.innerHTML = `
-      <button
-        class="w-full flex items-center gap-3 text-left"
-        onclick="toggleAccordion(this, '${item.link}')"
-      >
-        <span class="text-sm font-semibold text-gray-400 w-6">
-          ${index + 1}.
-        </span>
-
-        <div class="flex-1">
-          <p class="text-sm font-medium text-gray-900">
-            ${item.name}
-          </p>
-          <p class="text-xs text-gray-500 truncate">
-            ${item.link}
-          </p>
-        </div>
-
-        <span class="text-gray-400 transition-transform">
-          ▾
-        </span>
-      </button>
-
-      <div class="accordion-content hidden mt-3"></div>
-    `;
-
-    list.appendChild(row);
-  });
-}
-
-function closeModal() {
-  document.getElementById('modal').classList.add('translate-x-full');
-}
-
-function toggleAccordion(button, link) {
-  const row = button.closest('div');
-  const content = row.querySelector('.accordion-content');
-  const arrow = button.querySelector('span:last-child');
-
-  const isOpen = !content.classList.contains('hidden');
-
-  document.querySelectorAll('.accordion-content').forEach(el => {
-    if (el !== content) {
-      el.classList.add('hidden');
-      el.innerHTML = '';
-    }
-  });
-
-  document.querySelectorAll('button span:last-child')
-    .forEach(el => el.classList.remove('rotate-180'));
-
-  if (isOpen) {
-    content.classList.add('hidden');
-    return;
-  }
-
-  // 🚀 short link langsung tab baru
-  if (isShortUrl(link)) {
-    window.open(link, '_blank');
-    return;
-  }
-
-  arrow.classList.add('rotate-180');
-  content.classList.remove('hidden');
-
-  // ▶️ YouTube Shorts
-  if (link.includes('youtube.com/shorts')) {
-    window.open(link, '_blank');
-    content.innerHTML = `
-      <p class="text-sm text-gray-400">
-        Shorts dibuka di YouTube ▶️
-      </p>
-    `;
-    return;
-  }
-
-  // ▶️ YouTube normal
-  if (isYouTube(link)) {
-    const videoId = getYoutubeId(link);
-
-    if (!videoId) {
-      window.open(link, '_blank');
-      return;
+    /* ───────────── THEME ───────────── */
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      const icon = document.getElementById('themeIcon');
+      icon.classList.toggle('fa-moon');
+      icon.classList.toggle('fa-sun');
     }
 
-    content.innerHTML = `
-      <div class="w-full aspect-video max-h-[60vh] rounded-xl overflow-hidden bg-black">
-        <iframe
-          class="w-full h-full"
-          src="https://www.youtube.com/embed/${videoId}"
-          allowfullscreen>
-        </iframe>
-      </div>
-    `;
-    return;
-  }
+    /* ───────────── TAB SWITCH ───────────── */
+    function switchTab(tab) {
+      const panels = { kelas: 'panelKelas', invoice: 'panelInvoice' };
+      const navBtns = { kelas: 'navKelas', invoice: 'navInvoice' };
+      Object.keys(panels).forEach(k => {
+        document.getElementById(panels[k]).classList.toggle('hidden', k !== tab);
+        document.getElementById(navBtns[k]).classList.toggle('active', k === tab);
+      });
+      if (tab === 'invoice' && document.querySelectorAll('.item-row').length === 0) {
+        addItemRow();
+      }
+    }
 
-// 📸 Instagram
-  if (isInstagram(link)) {
-    window.open(link, '_blank');
-    content.innerHTML = `
-      <p class="text-sm text-gray-400">
-        Instagram dibuka di tab baru 📸
-      </p>
-    `;
-    return;
-  }
+    /* ───────────── SEARCH ───────────── */
+    function filterCards() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      document.querySelectorAll('.kelas-card').forEach(card => {
+        const title = card.dataset.title.toLowerCase();
+        card.style.display = title.includes(q) ? '' : 'none';
+      });
+    }
 
-  // ☁️ Google Drive
-  if (isGoogleDrive(link)) {
-    const previewLink = getDrivePreviewLink(link);
+    /* ───────────── KELAS MODAL ───────────── */
+    let pdfViewerWindow = null;
 
-    content.innerHTML = `
-      <div class="w-full h-[70vh] rounded-xl overflow-hidden border bg-gray-50">
-        <iframe
-          src="${previewLink}"
-          class="w-full h-full"
-          allow="autoplay">
-        </iframe>
-      </div>
-      <a
-        href="${link}"
-        target="_blank"
-        class="inline-block mt-2 text-sm text-blue-500 hover:underline">
-        Buka di Google Drive ↗
-      </a>
-    `;
-    return;
-  }
+    function openModal(kelas) {
+      document.getElementById('modalTitle').textContent = kelas.title;
+      document.getElementById('modalOrganizer').textContent = 'by ' + kelas.organizer;
 
-  // 📊 PPT / PPTX
-if (link.match(/\.(ppt|pptx)$/i)) {
-  const viewerLink = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(link)}`;
+      const list = document.getElementById('materialList');
+      list.innerHTML = '';
 
-  content.innerHTML = `
-    <div class="w-full h-[75vh] rounded-xl overflow-hidden border bg-gray-50">
-      <iframe
-        src="${viewerLink}"
-        class="w-full h-full"
-        frameborder="0">
-      </iframe>
-    </div>
+      kelas.materials.forEach(mat => {
+        const isExternal = mat.link.startsWith('http');
+        const isPdf = mat.link.toLowerCase().endsWith('.pdf');
+        const isImg = /\.(jpg|jpeg|png|gif|webp)$/i.test(mat.link);
+        const isYoutube = mat.link.includes('youtu');
 
-    <a
-      href="${link}"
-      target="_blank"
-      class="inline-block mt-2 text-sm text-blue-500 hover:underline">
-      Buka file PowerPoint ↗
-    </a>
-  `;
-  return;
-}
+        const icon = isYoutube ? 'fa-brands fa-youtube text-red-500'
+                   : isPdf    ? 'fa-solid fa-file-pdf text-pink-500'
+                   : isImg    ? 'fa-solid fa-image text-purple-400'
+                   : isExternal ? 'fa-solid fa-link text-blue-400'
+                   : 'fa-solid fa-file text-gray-400';
 
-if (link.match(/\.(jpg|jpeg|png|webp)$/i)) {
-  content.innerHTML = `
-    <div class="w-full max-h-[70vh] flex items-center justify-center bg-black/5 rounded-xl p-3">
-      <img
-        src="${link}"
-        alt="Preview Gambar"
-        class="max-h-[65vh] w-auto object-contain rounded-lg shadow"
-        loading="lazy"
-      />
-    </div>
-  `;
-  return;
-}
+        const div = document.createElement('div');
+        div.className = 'flex items-center gap-3 px-5 py-3.5 active:bg-pink-50 cursor-pointer';
+        div.innerHTML = `
+          <i class="${icon} w-5 text-center"></i>
+          <span class="text-sm text-gray-800 flex-1">${mat.name}</span>
+          <i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i>
+        `;
+        div.onclick = () => {
+          if (isPdf && !isExternal) {
+            openPdfViewer(mat.link, mat.name);
+          } else {
+            window.open(mat.link, '_blank');
+          }
+        };
+        list.appendChild(div);
+      });
 
-  // 📄 PDF
-  if (link.endsWith('.pdf')) {
-    content.innerHTML = `
-      <div class="w-full h-screen rounded-xl overflow-hidden border bg-gray-50">
-        <div id="pdfViewer" class="w-full h-full overflow-y-auto p-4"></div>
-      </div>
-    `;
-    renderPDF(link);
-    return;
-  }
+      document.getElementById('kelasModal').classList.add('open');
+    }
 
-  content.innerHTML = `
-    <p class="text-sm text-gray-400">
-      Preview tidak tersedia
-    </p>
-  `;
-}
+    function closeModal() {
+      document.getElementById('kelasModal').classList.remove('open');
+    }
 
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    function openPdfViewer(url, name) {
+      // Open in new tab with pdf.js viewer fallback
+      window.open(url, '_blank');
+    }
 
-async function renderPDF(url) {
-  const container = document.getElementById('pdfViewer');
-  container.innerHTML = '';
+    /* ───────────── INVOICE LOGIC ───────────── */
+    let itemCount = 0;
 
-  const pdf = await pdfjsLib.getDocument(url).promise;
-
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page = await pdf.getPage(pageNum);
-
-    const viewport = page.getViewport({ scale: 1.2 }); // aman mobile
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    canvas.className = 'mx-auto rounded-lg shadow';
-
-    await page.render({
-      canvasContext: ctx,
-      viewport: viewport
-    }).promise;
-
-    container.appendChild(canvas);
-  }
-}
-
-function openModalKomposisi(data) {
-  document.getElementById('modalKomposisi').classList.remove('translate-x-full');
-  document.getElementById('modalTitleKomposisi').textContent = data.title;
-  document.getElementById('modalOrganizerKomposisi').textContent = 'by ' + data.organizer;
-
-  const list = document.getElementById('materialListKomposisi');
-  list.innerHTML = '';
-
-  data.materials.forEach((item, index) => {
-    const row = document.createElement('div');
-    row.className = 'p-4';
-
-    row.innerHTML = `
-      <button
-        class="w-full flex items-center gap-3 text-left"
-        onclick="toggleAccordion(this, '${item.link}')"
-      >
-        <span class="text-sm font-semibold text-gray-400 w-6">
-          ${index + 1}.
-        </span>
-
-        <div class="flex-1">
-          <p class="text-sm font-medium text-gray-900">
-            ${item.name}
-          </p>
-          <p class="text-xs text-gray-500 truncate">
-            ${item.link}
-          </p>
+    function addItemRow() {
+      itemCount++;
+      const id = itemCount;
+      const row = document.createElement('div');
+      row.className = 'item-row bg-gray-50 rounded-xl p-3 space-y-2';
+      row.dataset.id = id;
+      row.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-pink-500">Item #${id}</span>
+          <button onclick="removeItemRow(${id})" class="text-gray-300 hover:text-red-400 transition">
+            <i class="fa-solid fa-times"></i>
+          </button>
         </div>
-
-        <span class="text-gray-400 transition-transform">
-          ▾
-        </span>
-      </button>
-
-      <div class="accordion-content hidden mt-3"></div>
-    `;
-
-    list.appendChild(row);
-  });
-}
-
-function closeModalKomposisi() {
-  document.getElementById('modalKomposisi').classList.add('translate-x-full');
-}
-
-function openModalEYC(data) {
-  document.getElementById('modalEYC').classList.remove('translate-x-full');
-  document.getElementById('modalTitleEYC').textContent = data.title;
-  document.getElementById('modalOrganizerEYC').textContent = 'by ' + data.organizer;
-
-  const list = document.getElementById('materialListEYC');
-  list.innerHTML = '';
-
-  data.materials.forEach((item, index) => {
-    const row = document.createElement('div');
-    row.className = 'p-4';
-
-    row.innerHTML = `
-      <button
-        class="w-full flex items-center gap-3 text-left"
-        onclick="toggleAccordion(this, '${item.link}')"
-      >
-        <span class="text-sm font-semibold text-gray-400 w-6">
-          ${index + 1}.
-        </span>
-
-        <div class="flex-1">
-          <p class="text-sm font-medium text-gray-900">
-            ${item.name}
-          </p>
-          <p class="text-xs text-gray-500 truncate">
-            ${item.link}
-          </p>
+        <input type="text" placeholder="Nama item / deskripsi" data-field="name"
+          class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                 focus:outline-none focus:ring-2 focus:ring-pink-200" />
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="text-[10px] text-gray-400">Qty</label>
+            <input type="number" min="1" value="1" data-field="qty" oninput="recalc()"
+              class="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-pink-200" />
+          </div>
+          <div>
+            <label class="text-[10px] text-gray-400">Harga Satuan (Rp)</label>
+            <input type="number" min="0" placeholder="0" data-field="price" oninput="recalc()"
+              class="w-full border border-gray-200 rounded-lg px-2 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-pink-200" />
+          </div>
+          <div>
+            <label class="text-[10px] text-gray-400">Subtotal</label>
+            <div class="w-full border border-gray-100 bg-white rounded-lg px-2 py-2 text-sm text-gray-500" data-field="subtotal">Rp 0</div>
+          </div>
         </div>
+      `;
+      row.querySelectorAll('input').forEach(el => el.addEventListener('input', recalc));
+      document.getElementById('itemRows').appendChild(row);
+      recalc();
+    }
 
-        <span class="text-gray-400 transition-transform">
-          ▾
-        </span>
-      </button>
+    function removeItemRow(id) {
+      const row = document.querySelector(`.item-row[data-id="${id}"]`);
+      if (row) row.remove();
+      recalc();
+    }
 
-      <div class="accordion-content hidden mt-3"></div>
-    `;
+    function getItems() {
+      return [...document.querySelectorAll('.item-row')].map(row => ({
+        name: row.querySelector('[data-field="name"]').value.trim() || '(tanpa nama)',
+        qty: parseInt(row.querySelector('[data-field="qty"]').value) || 1,
+        price: parseFloat(row.querySelector('[data-field="price"]').value) || 0,
+        subtotalEl: row.querySelector('[data-field="subtotal"]'),
+      }));
+    }
 
-    list.appendChild(row);
-  });
-}
+    function formatRp(n) {
+      return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+    }
 
-function closeModalEYC() {
-  document.getElementById('modalEYC').classList.add('translate-x-full');
-}
+    function recalc() {
+      const items = getItems();
+      let subtotal = 0;
+      items.forEach(item => {
+        const s = item.qty * item.price;
+        subtotal += s;
+        if (item.subtotalEl) item.subtotalEl.textContent = formatRp(s);
+      });
 
-function openModalIlustrasi(data) {
-  document.getElementById('modalIlustrasi').classList.remove('translate-x-full');
-  document.getElementById('modalTitleIlustrasi').textContent = data.title;
-  document.getElementById('modalOrganizerIlustrasi').textContent = 'by ' + data.organizer;
+      const diskon = parseFloat(document.getElementById('invDiskon').value) || 0;
+      const tambahan = parseFloat(document.getElementById('invTambahan').value) || 0;
+      const grand = subtotal - diskon + tambahan;
 
-  const list = document.getElementById('materialListIlustrasi');
-  list.innerHTML = '';
+      document.getElementById('previewSubtotal').textContent = formatRp(subtotal);
+      document.getElementById('previewDiskon').textContent = '- ' + formatRp(diskon);
+      document.getElementById('previewTambahan').textContent = '+ ' + formatRp(tambahan);
+      document.getElementById('previewGrand').textContent = formatRp(grand);
 
-  data.materials.forEach((item, index) => {
-    const row = document.createElement('div');
-    row.className = 'p-4';
+      const tambahanLabel = document.getElementById('invTambahanLabel').value.trim() || 'Tambahan';
+      document.getElementById('previewTambahanLabel').textContent = tambahanLabel;
+    }
 
-    row.innerHTML = `
-      <button
-        class="w-full flex items-center gap-3 text-left"
-        onclick="toggleAccordion(this, '${item.link}')"
-      >
-        <span class="text-sm font-semibold text-gray-400 w-6">
-          ${index + 1}.
-        </span>
+    document.getElementById('invTambahanLabel').addEventListener('input', recalc);
 
-        <div class="flex-1">
-          <p class="text-sm font-medium text-gray-900">
-            ${item.name}
-          </p>
-          <p class="text-xs text-gray-500 truncate">
-            ${item.link}
-          </p>
+    /* ───────────── INVOICE PDF GENERATOR ───────────── */
+    async function generateInvoice() {
+      const customer = document.getElementById('invCustomer').value.trim();
+      if (!customer) { alert('Nama customer wajib diisi!'); return; }
+
+      const items = getItems();
+      if (items.length === 0) { alert('Tambahkan minimal satu item!'); return; }
+
+      const diskon = parseFloat(document.getElementById('invDiskon').value) || 0;
+      const tambahan = parseFloat(document.getElementById('invTambahan').value) || 0;
+      const tambahanLabel = document.getElementById('invTambahanLabel').value.trim() || 'Tambahan';
+      const note = document.getElementById('invNote').value.trim();
+
+      let subtotal = 0;
+      items.forEach(i => subtotal += i.qty * i.price);
+      const grand = subtotal - diskon + tambahan;
+
+      const invNumber = 'INV-' + Date.now().toString().slice(-8);
+      const today = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+
+      // Build item rows HTML
+      const itemRowsHtml = items.map((item, idx) => `
+        <tr style="border-bottom:1px solid #f3e8ef;">
+          <td style="padding:9px 10px;color:#555;font-size:13px;">${idx + 1}</td>
+          <td style="padding:9px 10px;font-size:13px;">${item.name}</td>
+          <td style="padding:9px 10px;text-align:center;font-size:13px;">${item.qty}</td>
+          <td style="padding:9px 10px;text-align:right;font-size:13px;">${formatRp(item.price)}</td>
+          <td style="padding:9px 10px;text-align:right;font-size:13px;font-weight:600;">${formatRp(item.qty * item.price)}</td>
+        </tr>
+      `).join('');
+
+      const previewEl = document.getElementById('invoicePreview');
+      previewEl.innerHTML = `
+        <div style="font-family:'Inter',sans-serif;color:#1a1a1a;background:#fff;width:794px;min-height:1122px;padding:52px;box-sizing:border-box;position:relative;">
+
+          <!-- Header -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:36px;">
+            <div>
+              <div style="font-size:26px;font-weight:800;color:#ec4899;letter-spacing:-0.5px;line-height:1;">Gamboa Art</div>
+              <div style="font-style:italic;color:#be185d;font-size:11px;margin-top:2px;">Every stuff made with love~</div>
+              <div style="margin-top:10px;font-size:11px;color:#6b7280;line-height:1.7;">
+                Kp. Sukaraja, Kabupaten Purwakarta<br>
+                Jawa Barat<br>
+                @gamboaartxyz
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:28px;font-weight:300;color:#d1d5db;letter-spacing:2px;">INVOICE</div>
+              <div style="font-size:12px;color:#ec4899;font-weight:600;margin-top:4px;">${invNumber}</div>
+              <div style="font-size:11px;color:#9ca3af;margin-top:2px;">${today}</div>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div style="height:2px;background:linear-gradient(to right,#ec4899,#f9a8d4,transparent);margin-bottom:28px;border-radius:2px;"></div>
+
+          <!-- Billing to -->
+          <div style="margin-bottom:28px;">
+            <div style="font-size:10px;font-weight:700;color:#9ca3af;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;">Kepada</div>
+            <div style="font-size:16px;font-weight:700;color:#1a1a1a;">${customer}</div>
+          </div>
+
+          <!-- Items Table -->
+          <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+            <thead>
+              <tr style="background:#fdf2f8;">
+                <th style="padding:10px 10px;text-align:left;font-size:11px;font-weight:700;color:#be185d;letter-spacing:0.5px;width:36px;">#</th>
+                <th style="padding:10px 10px;text-align:left;font-size:11px;font-weight:700;color:#be185d;letter-spacing:0.5px;">Item</th>
+                <th style="padding:10px 10px;text-align:center;font-size:11px;font-weight:700;color:#be185d;letter-spacing:0.5px;width:56px;">Qty</th>
+                <th style="padding:10px 10px;text-align:right;font-size:11px;font-weight:700;color:#be185d;letter-spacing:0.5px;width:130px;">Harga</th>
+                <th style="padding:10px 10px;text-align:right;font-size:11px;font-weight:700;color:#be185d;letter-spacing:0.5px;width:130px;">Jumlah</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemRowsHtml}
+            </tbody>
+          </table>
+
+          <!-- Totals -->
+          <div style="display:flex;justify-content:flex-end;">
+            <div style="width:280px;">
+              <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px;color:#6b7280;border-bottom:1px dashed #fce7f3;">
+                <span>Subtotal</span><span>${formatRp(subtotal)}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px;color:#ef4444;border-bottom:1px dashed #fce7f3;">
+                <span>Diskon</span><span>- ${formatRp(diskon)}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:7px 0;font-size:13px;color:#6b7280;border-bottom:1px dashed #fce7f3;">
+                <span>${tambahanLabel}</span><span>+ ${formatRp(tambahan)}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:12px 14px;margin-top:8px;background:#fdf2f8;border-radius:10px;">
+                <span style="font-size:14px;font-weight:800;color:#be185d;">Grand Total</span>
+                <span style="font-size:15px;font-weight:800;color:#ec4899;">${formatRp(grand)}</span>
+              </div>
+            </div>
+          </div>
+
+          ${note ? `
+          <!-- Note -->
+          <div style="margin-top:36px;padding:16px 20px;background:#fdf9ff;border-left:3px solid #ec4899;border-radius:0 8px 8px 0;">
+            <div style="font-size:10px;font-weight:700;color:#be185d;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Catatan</div>
+            <div style="font-size:12px;color:#4b5563;line-height:1.6;">${note}</div>
+          </div>` : ''}
+
+          <!-- Footer -->
+          <div style="position:absolute;bottom:48px;left:52px;right:52px;">
+            <div style="height:1px;background:linear-gradient(to right,#fce7f3,#ec4899,#fce7f3);margin-bottom:16px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-size:11px;color:#9ca3af;">Gamboa Art · @gamboaartxyz</div>
+              <div style="font-size:11px;font-style:italic;color:#ec4899;">Every stuff made with love~</div>
+            </div>
+          </div>
+
         </div>
+      `;
 
-        <span class="text-gray-400 transition-transform">
-          ▾
-        </span>
-      </button>
+      // Render to PDF
+      const btn = document.querySelector('#panelInvoice button[onclick="generateInvoice()"]');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch spinner"></i> Membuat PDF...';
 
-      <div class="accordion-content hidden mt-3"></div>
-    `;
+      try {
+        const canvas = await html2canvas(previewEl.firstElementChild, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        });
 
-    list.appendChild(row);
-  });
-}
-
-function closeModalIlustrasi() {
-  document.getElementById('modalIlustrasi').classList.add('translate-x-full');
-}
-
-function openModalPencahayaan(data) {
-  document.getElementById('modalPencahayaan').classList.remove('translate-x-full');
-  document.getElementById('modalTitlePencahayaan').textContent = data.title;
-  document.getElementById('modalOrganizerPencahayaan').textContent = 'by ' + data.organizer;
-
-  const list = document.getElementById('materialListPencahayaan');
-  list.innerHTML = '';
-
-  data.materials.forEach((item, index) => {
-    const row = document.createElement('div');
-    row.className = 'p-4';
-
-    row.innerHTML = `
-      <button
-        class="w-full flex items-center gap-3 text-left"
-        onclick="toggleAccordion(this, '${item.link}')"
-      >
-        <span class="text-sm font-semibold text-gray-400 w-6">
-          ${index + 1}.
-        </span>
-
-        <div class="flex-1">
-          <p class="text-sm font-medium text-gray-900">
-            ${item.name}
-          </p>
-          <p class="text-xs text-gray-500 truncate">
-            ${item.link}
-          </p>
-        </div>
-
-        <span class="text-gray-400 transition-transform">
-          ▾
-        </span>
-      </button>
-
-      <div class="accordion-content hidden mt-3"></div>
-    `;
-
-    list.appendChild(row);
-  });
-}
-
-function closeModalPencahayaan() {
-  document.getElementById('modalPencahayaan').classList.add('translate-x-full');
-}
-
-function openModalPerspektif(data) {
-  document.getElementById('modalPerspektif').classList.remove('translate-x-full');
-  document.getElementById('modalTitlePerspektif').textContent = data.title;
-  document.getElementById('modalOrganizerPerspektif').textContent = 'by ' + data.organizer;
-
-  const list = document.getElementById('materialListPerspektif');
-  list.innerHTML = '';
-
-  data.materials.forEach((item, index) => {
-    const row = document.createElement('div');
-    row.className = 'p-4';
-
-    row.innerHTML = `
-      <button
-        class="w-full flex items-center gap-3 text-left"
-        onclick="toggleAccordion(this, '${item.link}')"
-      >
-        <span class="text-sm font-semibold text-gray-400 w-6">
-          ${index + 1}.
-        </span>
-
-        <div class="flex-1">
-          <p class="text-sm font-medium text-gray-900">
-            ${item.name}
-          </p>
-          <p class="text-xs text-gray-500 truncate">
-            ${item.link}
-          </p>
-        </div>
-
-        <span class="text-gray-400 transition-transform">
-          ▾
-        </span>
-      </button>
-
-      <div class="accordion-content hidden mt-3"></div>
-    `;
-
-    list.appendChild(row);
-  });
-}
-
-function closeModalPerspektif() {
-  document.getElementById('modalPerspektif').classList.add('translate-x-full');
-}
-
-function toggleAccordionKomposisi(button, link) {
-  const content = button.parentElement.querySelector('.accordion-content');
-  const arrow = button.querySelector('span:last-child');
-
-  const isOpen = !content.classList.contains('hidden');
-
-  // close all accordion lain (optional tapi UX lebih enak)
-  document.querySelectorAll('.accordion-content').forEach(el => {
-    el.classList.add('hidden');
-  });
-  document.querySelectorAll('.accordion-content')
-    .forEach(el => el.innerHTML = '');
-  document.querySelectorAll('button span:last-child')
-    .forEach(el => el.classList.remove('rotate-180'));
-
-  if (isOpen) return;
-
-  arrow.classList.add('rotate-180');
-  content.classList.remove('hidden');
-
-  // render preview
-  if (link.includes('youtube.com') || link.includes('youtu.be')) {
-    const id = link.includes('v=')
-      ? link.split('v=')[1].split('&')[0]
-      : link.split('/').pop();
-
-    content.innerHTML = `
-      <div class="w-full aspect-video max-h-[60vh] rounded-xl overflow-hidden bg-black">
-        <iframe
-          class="w-full h-full"
-          src="https://www.youtube.com/embed/${id}"
-          allowfullscreen>
-        </iframe>
-      </div>
-    `;
-  } 
-  else if (link.endsWith('.pdf')) {
-  content.innerHTML = `
-    <div class="w-full h-screen rounded-xl overflow-hidden border bg-gray-50">
-      <div id="pdfViewer" class="w-full h-full overflow-y-auto space-y-6 p-4"></div>
-    </div>
-  `;
-
-  renderPDF(link);
-}
-  else {
-    content.innerHTML = `
-      <p class="text-sm text-gray-400">
-        Preview tidak tersedia
-      </p>
-    `;
-  }
-}
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const imgData = canvas.toDataURL('image/png');
+        const pdfW = pdf.internal.pageSize.getWidth();
+        const pdfH = (canvas.height * pdfW) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
+        pdf.save(`${invNumber}_${customer.replace(/\s+/g,'_')}.pdf`);
+      } catch(e) {
+        alert('Gagal generate PDF. Coba lagi.');
+        console.error(e);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-file-arrow-down"></i> Generate & Download Invoice PDF';
+        previewEl.innerHTML = '';
+      }
+    }
   </script>
 </body>
 </html>
