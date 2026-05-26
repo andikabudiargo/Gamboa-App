@@ -16,7 +16,6 @@
   <style>
     body { font-family: 'Inter', sans-serif; }
 
-    /* ── Slide-in modal ── */
     .modal-panel {
       transform: translateX(100%);
       transition: transform 0.3s ease-out;
@@ -25,23 +24,20 @@
       transform: translateX(0);
     }
 
-    /* ── Bottom nav ── */
     .nav-btn { transition: color .2s, border-color .2s; }
     .nav-btn.active { color: #ec4899; border-color: #ec4899; }
 
-    /* ── Invoice preview (hidden, used for PDF render) ── */
     #invoicePreview {
       position: fixed;
       left: -9999px;
       top: 0;
-      width: 794px; /* A4 width at 96dpi */
+      width: 794px;
       background: #fff;
       font-family: 'Inter', sans-serif;
       padding: 48px 52px;
       box-sizing: border-box;
     }
 
-    /* ── Spinner ── */
     @keyframes spin { to { transform: rotate(360deg); } }
     .spinner { animation: spin 0.8s linear infinite; }
   </style>
@@ -49,30 +45,26 @@
 
 <body class="min-h-screen bg-[url('bg-1.png')] bg-cover bg-center">
 
-  <!-- ═══════════════════════════════════════
-       HEADER
-  ═══════════════════════════════════════ -->
+  <!-- HEADER -->
   <header class="flex items-center justify-between px-6 py-4 border-b border-white/20">
-    <h1 class="text-gray-600 text-xl font-semibold tracking-wide">Gamboa Art</h1>
+    <!-- FIX 1: Logo gambar, bukan teks -->
+    <img src="IMG_1061.PNG" alt="Gamboa Art" class="h-10 object-contain" />
     <button onclick="toggleTheme()"
       class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-pink-100 transition">
       <i id="themeIcon" class="fa-solid fa-moon text-gray-900"></i>
     </button>
   </header>
 
-  <!-- ═══════════════════════════════════════
-       MAIN — two tab panels
-  ═══════════════════════════════════════ -->
+  <!-- MAIN -->
   <main class="max-w-3xl mx-auto px-6 py-8 pb-28">
 
-    <!-- ── PANEL: Kelas ─────────────────────── -->
+    <!-- PANEL: Kelas -->
     <div id="panelKelas">
       <div class="mb-6">
         <h1 class="text-lg font-bold text-gray-900">Halo, Fredelida Gamboa Masela 🌱</h1>
         <p class="text-gray-600 text-sm mt-1">Mau cari materi apa hari ini?</p>
       </div>
 
-      <!-- Search -->
       <div class="relative">
         <input type="text" id="searchInput" placeholder="Misal: Kelas Warna Lanjutan..."
           oninput="filterCards()"
@@ -90,10 +82,8 @@
         <div class="w-full mt-2 border-b-2 border-gray-900"></div>
       </div>
 
-      <!-- Cards Grid -->
       <div id="cardGrid" class="grid grid-cols-2 gap-4 mt-5">
 
-        <!-- Card: Warna Dasar -->
         <div class="kelas-card bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
           data-title="Kelas Warna Dasar"
           onclick="openModal(kelasList[0])">
@@ -105,7 +95,6 @@
           </div>
         </div>
 
-        <!-- Card: Ilustrasi Cerita Anak -->
         <div class="kelas-card bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
           data-title="Ilustrasi Cerita Anak Intensif"
           onclick="openModal(kelasList[1])">
@@ -117,7 +106,6 @@
           </div>
         </div>
 
-        <!-- Card: Explore Your Character -->
         <div class="kelas-card bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
           data-title="Explore Your Character"
           onclick="openModal(kelasList[2])">
@@ -129,7 +117,6 @@
           </div>
         </div>
 
-        <!-- Card: Komposisi -->
         <div class="kelas-card bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
           data-title="Komposisi dan Cover Book"
           onclick="openModal(kelasList[3])">
@@ -141,7 +128,6 @@
           </div>
         </div>
 
-        <!-- Card: Pencahayaan -->
         <div class="kelas-card bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
           data-title="Kelas Pencahayaan"
           onclick="openModal(kelasList[4])">
@@ -153,7 +139,6 @@
           </div>
         </div>
 
-        <!-- Card: Perspektif -->
         <div class="kelas-card bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer"
           data-title="Kelas Perspektif Buku Anak"
           onclick="openModal(kelasList[5])">
@@ -165,10 +150,10 @@
           </div>
         </div>
 
-      </div><!-- /cardGrid -->
-    </div><!-- /panelKelas -->
+      </div>
+    </div>
 
-    <!-- ── PANEL: Invoice ────────────────────── -->
+    <!-- PANEL: Invoice -->
     <div id="panelInvoice" class="hidden">
       <div class="mb-6">
         <h1 class="text-lg font-bold text-gray-900">🧾 Buat Invoice</h1>
@@ -177,7 +162,6 @@
 
       <div class="bg-white/90 rounded-2xl shadow-sm p-5 space-y-5">
 
-        <!-- Customer -->
         <div>
           <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Nama Customer</label>
           <input id="invCustomer" type="text" placeholder="Contoh: Siti Aisyah"
@@ -185,7 +169,6 @@
                    focus:outline-none focus:ring-2 focus:ring-pink-300" />
         </div>
 
-        <!-- Items -->
         <div>
           <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Item</label>
           <div id="itemRows" class="space-y-3 mt-2"></div>
@@ -195,10 +178,8 @@
           </button>
         </div>
 
-        <!-- Divider -->
         <div class="border-t border-dashed border-gray-200"></div>
 
-        <!-- Diskon & Tambahan -->
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Diskon (Rp)</label>
@@ -214,7 +195,6 @@
           </div>
         </div>
 
-        <!-- Label tambahan -->
         <div>
           <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Keterangan Tambahan</label>
           <input id="invTambahanLabel" type="text" placeholder="Misal: Pajak 11%"
@@ -222,7 +202,6 @@
                    focus:outline-none focus:ring-2 focus:ring-pink-300" />
         </div>
 
-        <!-- Summary Preview -->
         <div class="bg-pink-50 rounded-xl p-4 space-y-1.5 text-sm">
           <div class="flex justify-between text-gray-600">
             <span>Subtotal</span><span id="previewSubtotal">Rp 0</span>
@@ -238,7 +217,6 @@
           </div>
         </div>
 
-        <!-- Note -->
         <div>
           <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Catatan (opsional)</label>
           <textarea id="invNote" rows="2" placeholder="Terima kasih sudah berbelanja!"
@@ -246,7 +224,6 @@
                    focus:outline-none focus:ring-2 focus:ring-pink-300 resize-none"></textarea>
         </div>
 
-        <!-- Generate Button -->
         <button onclick="generateInvoice()"
           class="w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold
                  rounded-xl py-3 text-sm transition flex items-center justify-center gap-2">
@@ -255,13 +232,11 @@
         </button>
 
       </div>
-    </div><!-- /panelInvoice -->
+    </div>
 
   </main>
 
-  <!-- ═══════════════════════════════════════
-       BOTTOM NAV
-  ═══════════════════════════════════════ -->
+  <!-- BOTTOM NAV -->
   <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur border-t border-gray-200
               flex justify-around items-center px-4 py-2 z-50">
 
@@ -279,9 +254,7 @@
 
   </nav>
 
-  <!-- ═══════════════════════════════════════
-       KELAS SLIDE MODAL (single, reused)
-  ═══════════════════════════════════════ -->
+  <!-- KELAS SLIDE MODAL -->
   <div id="kelasModal"
     class="modal-panel fixed inset-0 bg-white z-[9999] flex flex-col">
     <div class="flex items-center justify-between px-5 py-4 border-b">
@@ -294,14 +267,9 @@
     <div id="materialList" class="flex-1 overflow-y-auto divide-y"></div>
   </div>
 
-  <!-- ═══════════════════════════════════════
-       INVOICE PREVIEW (off-screen, for PDF)
-  ═══════════════════════════════════════ -->
+  <!-- INVOICE PREVIEW (off-screen) -->
   <div id="invoicePreview"></div>
 
-  <!-- ═══════════════════════════════════════
-       SCRIPTS
-  ═══════════════════════════════════════ -->
   <script>
     /* ───────────── DATA ───────────── */
     const kelasList = [
@@ -481,8 +449,6 @@
     }
 
     /* ───────────── KELAS MODAL ───────────── */
-    let pdfViewerWindow = null;
-
     function openModal(kelas) {
       document.getElementById('modalTitle').textContent = kelas.title;
       document.getElementById('modalOrganizer').textContent = 'by ' + kelas.organizer;
@@ -511,7 +477,7 @@
         `;
         div.onclick = () => {
           if (isPdf && !isExternal) {
-            openPdfViewer(mat.link, mat.name);
+            window.open(mat.link, '_blank');
           } else {
             window.open(mat.link, '_blank');
           }
@@ -524,11 +490,6 @@
 
     function closeModal() {
       document.getElementById('kelasModal').classList.remove('open');
-    }
-
-    function openPdfViewer(url, name) {
-      // Open in new tab with pdf.js viewer fallback
-      window.open(url, '_blank');
     }
 
     /* ───────────── INVOICE LOGIC ───────────── */
@@ -618,638 +579,197 @@
     document.getElementById('invTambahanLabel').addEventListener('input', recalc);
 
     /* ───────────── INVOICE PRINT GENERATOR ───────────── */
-async function generateInvoice() {
+    async function generateInvoice() {
 
-  const customer = document.getElementById('invCustomer').value.trim();
+      const customer = document.getElementById('invCustomer').value.trim();
+      if (!customer) { alert('Nama customer wajib diisi!'); return; }
 
-  if (!customer) {
-    alert('Nama customer wajib diisi!');
-    return;
-  }
+      const items = getItems();
+      if (items.length === 0) { alert('Tambahkan minimal satu item!'); return; }
 
-  const items = getItems();
+      const diskon       = parseFloat(document.getElementById('invDiskon').value) || 0;
+      const tambahan     = parseFloat(document.getElementById('invTambahan').value) || 0;
+      const tambahanLabel = document.getElementById('invTambahanLabel').value.trim() || 'Tambahan';
+      const note         = document.getElementById('invNote').value.trim();
 
-  if (items.length === 0) {
-    alert('Tambahkan minimal satu item!');
-    return;
-  }
+      let subtotal = 0;
+      items.forEach(i => { subtotal += i.qty * i.price; });
+      const grand = subtotal - diskon + tambahan;
 
-  const diskon = parseFloat(document.getElementById('invDiskon').value) || 0;
-  const tambahan = parseFloat(document.getElementById('invTambahan').value) || 0;
+      const invNumber = 'INV-' + Date.now().toString().slice(-8);
+      const today = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
 
-  const tambahanLabel =
-    document.getElementById('invTambahanLabel').value.trim() || 'Tambahan';
+      const itemRowsHtml = items.map((item, idx) => `
+        <tr style="border-bottom:1px solid #f3e8ef;">
+          <td style="padding:9px 10px;color:#555;font-size:13px;">${idx + 1}</td>
+          <td style="padding:9px 10px;font-size:13px;">${item.name}</td>
+          <td style="padding:9px 10px;text-align:center;font-size:13px;">${item.qty}</td>
+          <td style="padding:9px 10px;text-align:right;font-size:13px;">${formatRp(item.price)}</td>
+          <td style="padding:9px 10px;text-align:right;font-size:13px;font-weight:600;">${formatRp(item.qty * item.price)}</td>
+        </tr>
+      `).join('');
 
-  const note = document.getElementById('invNote').value.trim();
+      /* ─── FIX 2: Semua CSS di-inline, tidak bergantung Tailwind/CDN eksternal di print window ─── */
+      const invoiceHtml = `
+        <div style="font-family:Arial,Helvetica,sans-serif;background:#f5f5f5;width:794px;min-height:1122px;margin:auto;position:relative;overflow:hidden;">
 
-  let subtotal = 0;
+          <!-- TOP GRADIENT -->
+          <div style="background:linear-gradient(135deg,#5b2c83 0%,#8f5b7b 45%,#f0b35f 100%);height:360px;padding:50px 55px;box-sizing:border-box;color:white;position:relative;">
 
-  items.forEach(i => {
-    subtotal += i.qty * i.price;
-  });
+            <!-- HEADER ROW -->
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
 
-  const grand = subtotal - diskon + tambahan;
+              <!-- LOGO BLOCK -->
+              <div style="display:flex;align-items:center;gap:14px;">
+                <img src="IMG_1061.PNG" style="width:52px;height:52px;object-fit:contain;" onerror="this.style.display='none'">
+                <div>
+                  <div style="font-size:28px;font-weight:800;line-height:1;">Gamboa Art</div>
+                  <div style="font-size:13px;opacity:.8;margin-top:4px;">Every stuff made with love~</div>
+                </div>
+              </div>
 
-  const invNumber =
-    'INV-' + Date.now().toString().slice(-8);
+              <!-- INVOICE INFO -->
+              <div style="text-align:left;min-width:220px;">
+                <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Invoice Number</div>
+                <div style="font-size:13px;opacity:.9;margin-bottom:22px;">${invNumber}</div>
+                <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Date</div>
+                <div style="font-size:13px;opacity:.9;margin-bottom:22px;">${today}</div>
+                <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Invoice To</div>
+                <div style="font-size:15px;opacity:.95;line-height:1.6;">${customer}</div>
+              </div>
 
-  const today = new Date().toLocaleDateString(
-    'id-ID',
-    {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
+            </div>
+
+            <!-- BIG TITLE -->
+            <div style="margin-top:80px;font-size:84px;font-weight:900;letter-spacing:2px;color:white;">INVOICE</div>
+
+          </div>
+
+          <!-- CONTENT -->
+          <div style="padding:0 50px 50px;margin-top:-60px;position:relative;z-index:2;">
+            <div style="background:white;border-radius:24px;padding:26px;box-shadow:0 10px 30px rgba(0,0,0,.08);">
+
+              <!-- TABLE -->
+              <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                  <tr style="background:#d9d9dc;">
+                    <th style="padding:18px 14px;text-align:left;font-size:14px;font-weight:800;">No.</th>
+                    <th style="padding:18px 14px;text-align:left;font-size:14px;font-weight:800;">Description</th>
+                    <th style="padding:18px 14px;text-align:center;font-size:14px;font-weight:800;">Quantity</th>
+                    <th style="padding:18px 14px;text-align:right;font-size:14px;font-weight:800;">Price</th>
+                    <th style="padding:18px 14px;text-align:right;font-size:14px;font-weight:800;">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>${itemRowsHtml}</tbody>
+              </table>
+
+              <!-- TOTAL BLOCK -->
+              <div style="display:flex;justify-content:flex-end;margin-top:28px;">
+                <div style="width:360px;">
+                  <div style="display:flex;justify-content:space-between;padding:12px 16px;font-size:15px;border-bottom:1px solid #eee;">
+                    <span>Subtotal</span><span>${formatRp(subtotal)}</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;padding:12px 16px;font-size:15px;border-bottom:1px solid #eee;color:#ef4444;">
+                    <span>Diskon</span><span>- ${formatRp(diskon)}</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;padding:12px 16px;font-size:15px;border-bottom:1px solid #eee;">
+                    <span>${tambahanLabel}</span><span>+ ${formatRp(tambahan)}</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;background:#f3c15d;margin-top:10px;font-size:18px;font-weight:800;">
+                    <span>Total</span><span>${formatRp(grand)}</span>
+                  </div>
+                </div>
+              </div>
+
+              ${note ? `
+              <!-- NOTE -->
+              <div style="margin-top:40px;">
+                <div style="font-size:18px;font-weight:800;margin-bottom:10px;">Note</div>
+                <div style="color:#555;line-height:1.8;font-size:14px;">${note}</div>
+              </div>` : ''}
+
+              <!-- THANK YOU -->
+              <div style="margin-top:45px;text-align:center;">
+                <div style="font-family:cursive;font-size:42px;color:#7b4c7d;transform:rotate(-3deg);letter-spacing:2px;">Thank You</div>
+                <div style="margin-top:6px;font-size:13px;color:#888;letter-spacing:1px;">We truly appreciate your order ✨</div>
+              </div>
+
+            </div>
+
+            <!-- FOOTER -->
+            <div style="margin-top:28px;background:#7b4c7d;border-radius:22px;padding:18px 28px;color:white;display:flex;justify-content:space-between;align-items:center;font-size:13px;">
+              <div>📞 +62 812-3456-7890</div>
+              <div>✉️ hello@gamboaart.com</div>
+              <div>🌐 www.gamboaart.com</div>
+            </div>
+
+          </div>
+        </div>
+      `;
+
+      /* ─── Button loading state ─── */
+      const btn = document.querySelector('#panelInvoice button[onclick="generateInvoice()"]');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch" style="animation:spin 0.8s linear infinite;display:inline-block;"></i> Menyiapkan Invoice...';
+
+      try {
+        const printWindow = window.open('', '_blank');
+
+        /* FIX: Semua CSS inline, tidak butuh CDN eksternal di print window */
+        printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${invNumber}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #f5f5f5;
+      padding: 20px;
+      font-family: Arial, Helvetica, sans-serif;
     }
-  );
-
-  /* ───────────── ITEM ROWS ───────────── */
-
-  const itemRowsHtml = items.map((item, idx) => `
-    <tr style="border-bottom:1px solid #f3e8ef;">
-      <td style="padding:9px 10px;color:#555;font-size:13px;">
-        ${idx + 1}
-      </td>
-
-      <td style="padding:9px 10px;font-size:13px;">
-        ${item.name}
-      </td>
-
-      <td style="padding:9px 10px;text-align:center;font-size:13px;">
-        ${item.qty}
-      </td>
-
-      <td style="padding:9px 10px;text-align:right;font-size:13px;">
-        ${formatRp(item.price)}
-      </td>
-
-      <td style="padding:9px 10px;text-align:right;font-size:13px;font-weight:600;">
-        ${formatRp(item.qty * item.price)}
-      </td>
-    </tr>
-  `).join('');
-
-  /* ───────────── PREVIEW HTML ───────────── */
-
-  const invoiceHtml = `
-<div
-  style="
-    font-family:'Inter',sans-serif;
-    background:#f5f5f5;
-    width:794px;
-    min-height:1122px;
-    margin:auto;
-    position:relative;
-    overflow:hidden;
-  "
->
-
-  <!-- TOP GRADIENT -->
-  <div
-    style="
-      background:linear-gradient(135deg,#5b2c83 0%, #8f5b7b 45%, #f0b35f 100%);
-      height:360px;
-      padding:50px 55px;
-      box-sizing:border-box;
-      color:white;
-      position:relative;
-    "
-  >
-
-    <!-- HEADER -->
-    <div
-      style="
-        display:flex;
-        justify-content:space-between;
-        align-items:flex-start;
-      "
-    >
-
-      <!-- LOGO -->
-      <div>
-
-        <div
-          style="
-            display:flex;
-            align-items:center;
-            gap:14px;
-          "
-        >
-
-          <img
-            src="IMG_1061.PNG"
-            style="
-              width:52px;
-              height:52px;
-              object-fit:contain;
-            "
-          >
-
-          <div>
-
-            <div
-              style="
-                font-size:28px;
-                font-weight:800;
-                line-height:1;
-              "
-            >
-              Gamboa Art
-            </div>
-
-            <div
-              style="
-                font-size:13px;
-                opacity:.8;
-                margin-top:4px;
-              "
-            >
-              Every stuff made with love~
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- INVOICE INFO -->
-      <div
-        style="
-          text-align:left;
-          min-width:220px;
-        "
-      >
-
-        <div
-          style="
-            font-size:14px;
-            font-weight:700;
-            margin-bottom:4px;
-          "
-        >
-          Invoice Number
-        </div>
-
-        <div
-          style="
-            font-size:13px;
-            opacity:.9;
-            margin-bottom:22px;
-          "
-        >
-          ${invNumber}
-        </div>
-
-        <div
-          style="
-            font-size:14px;
-            font-weight:700;
-            margin-bottom:4px;
-          "
-        >
-          Date
-        </div>
-
-        <div
-          style="
-            font-size:13px;
-            opacity:.9;
-            margin-bottom:22px;
-          "
-        >
-          ${today}
-        </div>
-
-        <div
-          style="
-            font-size:14px;
-            font-weight:700;
-            margin-bottom:4px;
-          "
-        >
-          Invoice To
-        </div>
-
-        <div
-          style="
-            font-size:15px;
-            opacity:.95;
-            line-height:1.6;
-          "
-        >
-          ${customer}
-        </div>
-
-      </div>
-
-    </div>
-
-    <!-- TITLE -->
-    <div
-      style="
-        margin-top:80px;
-        font-size:84px;
-        font-weight:900;
-        letter-spacing:2px;
-        color:white;
-      "
-    >
-      INVOICE
-    </div>
-
+    .invoice-wrapper {
+      width: 794px;
+      margin: auto;
+    }
+    @page { size: A4; margin: 0; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      /* Paksa background colors dan gradients tampil saat print */
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+    @media (max-width: 820px) {
+      body { padding: 0; background: #fff; }
+      .invoice-wrapper { width: 100%; }
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="invoice-wrapper">
+    ${invoiceHtml}
   </div>
+  <script>
+    window.onload = function() {
+      setTimeout(function() {
+        window.focus();
+        window.print();
+      }, 300);
+    };
+  <\/script>
+</body>
+</html>`);
 
-  <!-- CONTENT -->
-  <div
-    style="
-      padding:0 50px 50px;
-      margin-top:-60px;
-      position:relative;
-      z-index:2;
-    "
-  >
+        printWindow.document.close();
 
-    <div
-      style="
-        background:white;
-        border-radius:24px;
-        padding:26px;
-        box-shadow:0 10px 30px rgba(0,0,0,.08);
-      "
-    >
-
-      <!-- TABLE -->
-      <table
-        style="
-          width:100%;
-          border-collapse:collapse;
-          overflow:hidden;
-          border-radius:16px;
-        "
-      >
-
-        <thead>
-
-          <tr
-            style="
-              background:#d9d9dc;
-            "
-          >
-
-            <th
-              style="
-                padding:18px 14px;
-                text-align:left;
-                font-size:14px;
-                font-weight:800;
-              "
-            >
-              No.
-            </th>
-
-            <th
-              style="
-                padding:18px 14px;
-                text-align:left;
-                font-size:14px;
-                font-weight:800;
-              "
-            >
-              Description
-            </th>
-
-            <th
-              style="
-                padding:18px 14px;
-                text-align:center;
-                font-size:14px;
-                font-weight:800;
-              "
-            >
-              Quantity
-            </th>
-
-            <th
-              style="
-                padding:18px 14px;
-                text-align:right;
-                font-size:14px;
-                font-weight:800;
-              "
-            >
-              Price
-            </th>
-
-            <th
-              style="
-                padding:18px 14px;
-                text-align:right;
-                font-size:14px;
-                font-weight:800;
-              "
-            >
-              Subtotal
-            </th>
-
-          </tr>
-
-        </thead>
-
-        <tbody>
-
-          ${itemRowsHtml}
-
-        </tbody>
-
-      </table>
-
-      <!-- TOTAL -->
-      <div
-        style="
-          display:flex;
-          justify-content:flex-end;
-          margin-top:28px;
-        "
-      >
-
-        <div
-          style="
-            width:360px;
-          "
-        >
-
-          <div
-            style="
-              display:flex;
-              justify-content:space-between;
-              padding:12px 16px;
-              font-size:15px;
-              border-bottom:1px solid #eee;
-            "
-          >
-            <span>Subtotal</span>
-            <span>${formatRp(subtotal)}</span>
-          </div>
-
-          <div
-            style="
-              display:flex;
-              justify-content:space-between;
-              padding:12px 16px;
-              font-size:15px;
-              border-bottom:1px solid #eee;
-              color:#ef4444;
-            "
-          >
-            <span>Diskon</span>
-            <span>- ${formatRp(diskon)}</span>
-          </div>
-
-          <div
-            style="
-              display:flex;
-              justify-content:space-between;
-              padding:12px 16px;
-              font-size:15px;
-              border-bottom:1px solid #eee;
-            "
-          >
-            <span>${tambahanLabel}</span>
-            <span>+ ${formatRp(tambahan)}</span>
-          </div>
-
-          <div
-            style="
-              display:flex;
-              justify-content:space-between;
-              align-items:center;
-              padding:16px;
-              background:#f3c15d;
-              margin-top:10px;
-              font-size:18px;
-              font-weight:800;
-            "
-          >
-            <span>Total</span>
-            <span>${formatRp(grand)}</span>
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- NOTE -->
-      ${
-        note
-          ? `
-      <div
-        style="
-          margin-top:40px;
-        "
-      >
-
-        <div
-          style="
-            font-size:18px;
-            font-weight:800;
-            margin-bottom:10px;
-          "
-        >
-          Note
-        </div>
-
-        <div
-          style="
-            color:#555;
-            line-height:1.8;
-            font-size:14px;
-          "
-        >
-          ${note}
-        </div>
-
-      </div>
-      `
-          : ""
+      } catch(e) {
+        alert('Gagal membuka invoice: ' + e.message);
+        console.error(e);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-file-arrow-down"></i> Generate & Download Invoice PDF';
       }
-
-      <!-- THANK YOU -->
-      <div
-        style="
-          margin-top:45px;
-          text-align:center;
-        "
-      >
-
-        <div
-          style="
-            font-family:cursive;
-            font-size:42px;
-            color:#7b4c7d;
-            transform:rotate(-3deg);
-            letter-spacing:2px;
-          "
-        >
-          Thank You
-        </div>
-
-        <div
-          style="
-            margin-top:6px;
-            font-size:13px;
-            color:#888;
-            letter-spacing:1px;
-          "
-        >
-          We truly appreciate your order ✨
-        </div>
-
-      </div>
-
-    </div>
-
-    <!-- FOOTER -->
-    <div
-      style="
-        margin-top:28px;
-        background:#7b4c7d;
-        border-radius:22px;
-        padding:18px 28px;
-        color:white;
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        font-size:13px;
-      "
-    >
-
-      <div>📞 +62 812-3456-7890</div>
-
-      <div>✉️ hello@gamboaart.com</div>
-
-      <div>🌐 www.gamboaart.com</div>
-
-    </div>
-
-  </div>
-
-</div>
-  `;
-
-  /* ───────────── BUTTON LOADING ───────────── */
-
-  const btn = document.querySelector(
-    '#panelInvoice button[onclick="generateInvoice()"]'
-  );
-
-  btn.disabled = true;
-
-  btn.innerHTML =
-    '<i class="fa-solid fa-circle-notch spinner"></i> Menyiapkan Invoice...';
-
-  try {
-
-    const printWindow = window.open('', '_blank');
-
-    printWindow.document.write(`
-      <html>
-
-        <head>
-
-          <title>${invNumber}</title>
-
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1.0"
-          >
-
-          <style>
-
-            *{
-              box-sizing:border-box;
-            }
-
-            body{
-              margin:0;
-              padding:20px;
-              background:#f5f5f5;
-              font-family:'Inter',sans-serif;
-            }
-
-            @page{
-              size:A4;
-              margin:0;
-            }
-
-            @media print{
-
-              body{
-                background:#fff;
-                padding:0;
-              }
-
-            }
-
-            .invoice-container{
-              width:794px;
-              margin:auto;
-              background:#fff;
-            }
-
-            @media(max-width:820px){
-
-              body{
-                padding:0;
-                background:#fff;
-              }
-
-              .invoice-container{
-                width:100%;
-              }
-
-            }
-
-          </style>
-
-        </head>
-
-        <body>
-
-          <div class="invoice-container">
-            ${invoiceHtml}
-          </div>
-
-        </body>
-
-      </html>
-    `);
-
-    printWindow.document.close();
-
-    setTimeout(() => {
-
-      printWindow.focus();
-
-      printWindow.print();
-
-    }, 700);
-
-  } catch(e){
-
-    alert('Gagal membuka invoice');
-
-    console.error(e);
-
-  } finally {
-
-    btn.disabled = false;
-
-    btn.innerHTML =
-      '<i class="fa-solid fa-file-arrow-down"></i> Generate & Download Invoice PDF';
-
-  }
-
-}
+    }
   </script>
 </body>
 </html>
